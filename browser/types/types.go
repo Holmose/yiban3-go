@@ -187,10 +187,10 @@ func CreateBrowser(b *Browser, user User) {
 	b.Headers = header
 
 	chandata := ChanData{
-		FormChan:           make(chan FormTask),
-		DetailChan:         make(chan Detail),
-		CompleteDetailChan: make(chan CompleteDetail),
-		UnCompleteChan:     make(chan Data),
+		FormChan:           make(chan FormTask, 2),
+		DetailChan:         make(chan Detail, 2),
+		CompleteDetailChan: make(chan CompleteDetail, 2),
+		UnCompleteChan:     make(chan Data, 2),
 	}
 	b.ChanData = chandata
 }

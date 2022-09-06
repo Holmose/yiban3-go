@@ -17,10 +17,8 @@ retry:
 	// status 0 为否 false，不是假期
 	userTotal := "SELECT COUNT(*) FROM yiban_yiban where day>0;"
 	rst, ok := mysqlcon.Query(userTotal)
-	if ok {
-		log.Println("[获取数据成功！]")
-	} else {
-		log.Println("[没有获取到数据!] [重试中...]")
+	if !ok {
+		log.Println("[Database connection failed.] [Retry...]")
 		retryCount++
 		if retryCount <= 10 {
 			time.Sleep(time.Second)
@@ -29,7 +27,7 @@ retry:
 	}
 	count, err := strconv.Atoi(rst[0]["COUNT(*)"])
 	if err != nil {
-		log.Println("[获取用户总数失败]")
+		log.Println(err)
 	}
 	*userCount = []int{count}
 
@@ -40,7 +38,7 @@ retry:
 		"select ceil(count(*)/%v) as pageTotal from yiban_yiban where day>0;", pageNum)
 	rst, ok = mysqlcon.Query(pageCount)
 	if !ok {
-		log.Println("[没有获取到数据!] [重试中...]")
+		log.Println("[Failed to obtain paging data. ] [Trying again...]")
 		retryCount++
 		if retryCount <= 10 {
 			time.Sleep(time.Second)
@@ -54,10 +52,8 @@ retry:
 			"select * from yiban_yiban where day>0 limit %v offset %v;",
 			pageNum, i*pageNum)
 		rst, ok = mysqlcon.Query(pageMsg)
-		if ok {
-			log.Printf("[获取分页数据成功！第%v页]\n", i*pageNum)
-		} else {
-			log.Println("[没有获取到数据!] [重试中...]")
+		if !ok {
+			log.Println("[Failed to obtain paging data. ] [Trying again...]")
 			retryCount++
 			if retryCount <= 10 {
 				time.Sleep(time.Second)
@@ -69,11 +65,12 @@ retry:
 			userChan.C <- user
 		}
 		if err != nil {
-			log.Printf("[获取剩余天数失败: %v]", err)
+			log.Println("[Failed to obtain the remaining time!]")
 		}
 	}
 	// 安全关闭通道
 	userChan.SafeClose()
+	log.Println("[后端数据获取完成]")
 }
 
 func GetUserToQ(rst []map[string]string) ([]browser.User, error) {

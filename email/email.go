@@ -116,7 +116,7 @@ retry:
 		time.Sleep(time.Second * 60)
 		goto retry
 	} else {
-		log.Printf("用户：%v 邮件发送成功", b.User.Username)
+		log.Printf("[用户：%v 邮件发送成功]", b.User.Username)
 	}
 }
 

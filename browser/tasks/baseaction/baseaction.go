@@ -122,10 +122,10 @@ func FetchUnComplete(b *browser.Browser, t browser.Tasks) (d browser.Data, err e
 		timeUnix := time.Now().Unix()
 
 		if timeUnix >= d.StartTime && strings.Contains(d.Title, "体温报备") {
-			log.Printf("用户：%v %v 未打卡！", b.User.Username, d.Title)
+			log.Printf("(** 用户：%v %v 未打卡! **)", b.User.Username, d.Title)
 			return d, nil
 		} else if strings.Contains(d.Title, "学生身体状况采集") {
-			log.Printf("用户：%v %v 未打卡！", b.User.Username, d.Title)
+			log.Printf("(** 用户：%v %v 未打卡! **)", b.User.Username, d.Title)
 			return d, nil
 		}
 

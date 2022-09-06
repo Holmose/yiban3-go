@@ -25,7 +25,7 @@ func (a *LoadSystemConfigAction) Run(i interface{}) {
 type NewUserChanAction struct{}
 
 func (a *NewUserChanAction) Run(i interface{}) {
-	log.Println("[获取用户数据]")
+	log.Println("[开始获取后端数据]")
 	var userCount []int
 	var userChan *mychan.YibanChan
 
@@ -42,7 +42,6 @@ func (a *NewUserChanAction) Run(i interface{}) {
 type NewBrowserChanAction struct{}
 
 func (a *NewBrowserChanAction) Run(i interface{}) {
-	log.Println("[获取用户创建浏览器对象]")
 	datas := i.(map[string]interface{})
 	userCount := datas["userCount"].(*[]int)
 	for {
@@ -94,4 +93,6 @@ func (a *NewBrowserChanAction) Run(i interface{}) {
 
 	// 安全关闭通道
 	browserChan.SafeClose()
+
+	log.Println("[互联网资源分配完成]")
 }

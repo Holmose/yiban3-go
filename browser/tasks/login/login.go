@@ -183,10 +183,10 @@ func AuthSecond(b *browser.Browser, user *browser.User) ([]byte, error) {
 	strLen := len(string(bytes))
 
 	if strLen > 1000 {
-		log.Printf("[用户：%v, Verify认证成功!]", user.Username)
+		log.Printf("[用户：%v, 认证成功!]", user.Username)
 		return bytes, nil
 	} else {
-		log.Printf("[用户：%v, Verify认证失败!]", user.Username)
+		log.Printf("[用户：%v, 认证失败!]", user.Username)
 		return nil, fmt.Errorf(" Authentication failed")
 	}
 }

@@ -17,7 +17,6 @@ import (
 type LoginAction struct{}
 
 func (a *LoginAction) Run(i interface{}) {
-	log.Println("[执行登录操作]")
 	datas := i.(map[string]interface{})
 	for {
 		if datas["browserChan"] != nil {
@@ -61,6 +60,7 @@ func (a *LoginAction) Run(i interface{}) {
 			}
 		}
 	}()
+	log.Println("[创建登录进程] [成功]")
 	// 传递数据
 	datas["loginChan"] = loginChan
 
@@ -75,7 +75,6 @@ func (a *LoginAction) Run(i interface{}) {
 type GetLoginBrowserAction struct{}
 
 func (a *GetLoginBrowserAction) Run(i interface{}) {
-	log.Println("[启动 打卡执行程序]")
 	datas := i.(map[string]interface{})
 	for {
 		if datas["loginChan"] != nil {
@@ -100,18 +99,30 @@ func (a *GetLoginBrowserAction) Run(i interface{}) {
 				// 获取一个浏览器对象，发送数据到数据流中
 				wf := workflow.NewWorkFlow()
 				// 构建节点
-				testNode := workflow.NewNode(&clock.TestAction{})
+				PositionTemplateNode := workflow.NewNode(&clock.PositionTemplateAction{}) // 获取位置模板
+				UnClockListNode := workflow.NewNode(&clock.UnClockListAction{})           // 获取未打卡的列表
+				CreateFormNode := workflow.NewNode(&clock.CreateFormAction{})             // 获取打卡表单信息
+				GetDetailFormNode := workflow.NewNode(&clock.GetDetailFormAction{})       // 获取更为详细的表单信息
+				FillFormSubmitNode := workflow.NewNode(&clock.FillFormSubmitAction{})     // 填写打卡表单并提交
+
 				// 构建节点之间的关系
 				// 启始节点
-				wf.AddStartNode(testNode)
+				wf.AddStartNode(PositionTemplateNode)
+				wf.AddStartNode(UnClockListNode)
+
 				// 中间节点
+				wf.AddEdge(UnClockListNode, CreateFormNode)
+				wf.AddEdge(CreateFormNode, FillFormSubmitNode)
+				wf.AddEdge(UnClockListNode, GetDetailFormNode)
+				wf.AddEdge(GetDetailFormNode, FillFormSubmitNode)
+				wf.AddEdge(PositionTemplateNode, FillFormSubmitNode)
+
 				// 收尾节点
-				wf.ConnectToEnd(testNode)
+				wf.ConnectToEnd(FillFormSubmitNode)
 
 				// 数据
 				var completedAction map[string]interface{}
 				completedAction = make(map[string]interface{})
-
 				completedAction["loginBrowser"] = loginBrowser
 
 				ctx, _ := context.WithCancel(context.Background())
@@ -122,6 +133,7 @@ func (a *GetLoginBrowserAction) Run(i interface{}) {
 		}
 	}()
 
+	log.Println("[核心程序加载] [完成]")
 	wg.Wait()
 	fmt.Println("执行其他逻辑2")
 }

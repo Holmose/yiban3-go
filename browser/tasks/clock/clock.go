@@ -32,7 +32,6 @@ func GetCompleteByLocation(b *browser.Browser, position string) (c browser.Compl
 		completeList.Data[rand.Intn(lenCom)])
 
 	if err != nil {
-		log.Panicf("用户：%v 获取完成打卡的详细信息失败！", b.User.Username)
 		return c, err
 	}
 
@@ -47,15 +46,15 @@ func GetCompleteByLocation(b *browser.Browser, position string) (c browser.Compl
 		if d.Label == "获取定位" {
 			address := d.Value.(map[string]interface{})["address"]
 			if strings.Contains(completeDetail.Data.WFName, wfName) {
-				log.Printf("用户：%v，获取到一条 %v 符合！", b.User.Username, completeDetail.Data.WFName)
+				log.Printf("用户：%v，获取到一条 %v 符合! ", b.User.Username, completeDetail.Data.WFName)
 				if strings.Contains(address.(string), position) {
-					log.Printf("用户：%v，获取到一条 %v 符合！", b.User.Username, address.(string))
+					log.Printf("用户：%v，获取到一条 %v 符合! ", b.User.Username, address.(string))
 					return completeDetail, nil
 				} else {
-					return c, fmt.Errorf("用户：%v，当前记录 %v 不符合！", b.User.Username, address.(string))
+					return c, fmt.Errorf("用户：%v，当前记录 %v 不符合! ", b.User.Username, address.(string))
 				}
 			} else {
-				return c, fmt.Errorf("用户：%v，当前记录 %v 不符合！", b.User.Username, address.(string))
+				return c, fmt.Errorf("用户：%v，当前记录 %v 不符合! ", b.User.Username, address.(string))
 			}
 		}
 	}
