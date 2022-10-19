@@ -120,6 +120,7 @@ retry:
 	}
 }
 
+// YiTips 发送提醒消息
 func YiTips(mailTo []string, mailBody string) {
 	htmlBody := `<!DOCTYPE html>
         <html lang="en">
