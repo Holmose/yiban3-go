@@ -1,4 +1,4 @@
-package clock
+package action
 
 import (
 	"Yiban3/browser/fetcher"
@@ -6,7 +6,7 @@ import (
 	"Yiban3/browser/tasks/clock"
 	browser "Yiban3/browser/types"
 	"Yiban3/email"
-	"Yiban3/workflow/actionfunc"
+	"Yiban3/workflow/action/utils"
 	"encoding/json"
 	"fmt"
 	"log"

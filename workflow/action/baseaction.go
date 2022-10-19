@@ -1,9 +1,9 @@
-package workflow
+package action
 
 import (
+	"Yiban3/browser/config"
 	browser "Yiban3/browser/types"
-	"Yiban3/workflow/actionfunc"
-	"Yiban3/workflow/clock"
+	"Yiban3/workflow/action/utils"
 	"Yiban3/workflow/mychan"
 	"context"
 	"fmt"
@@ -12,6 +12,10 @@ import (
 	"sync"
 	"time"
 )
+
+/*
+	打卡程序流程块
+*/
 
 // LoginAction 取出浏览器对象，并执行登录操作
 type LoginAction struct{}
@@ -89,6 +93,15 @@ func (a *GetLoginBrowserAction) Run(i interface{}) {
 	wg.Add(1)
 	go func() {
 		count := 0
+		// 控制协程数量
+		var pool chan struct{}
+		// 最大协程数
+		pool = make(chan struct{}, config.MaxNum)
+		go func() {
+			for {
+				pool <- struct{}{}
+			}
+		}()
 		for {
 			if count >= userCount[0] {
 				wg.Done()
@@ -96,38 +109,12 @@ func (a *GetLoginBrowserAction) Run(i interface{}) {
 			}
 			select {
 			case loginBrowser := <-loginChan.C:
-				// 获取一个浏览器对象，发送数据到数据流中
-				wf := workflow.NewWorkFlow()
-				// 构建节点
-				PositionTemplateNode := workflow.NewNode(&clock.PositionTemplateAction{}) // 获取位置模板
-				UnClockListNode := workflow.NewNode(&clock.UnClockListAction{})           // 获取未打卡的列表
-				CreateFormNode := workflow.NewNode(&clock.CreateFormAction{})             // 获取打卡表单信息
-				GetDetailFormNode := workflow.NewNode(&clock.GetDetailFormAction{})       // 获取更为详细的表单信息
-				FillFormSubmitNode := workflow.NewNode(&clock.FillFormSubmitAction{})     // 填写打卡表单并提交
-
-				// 构建节点之间的关系
-				// 启始节点
-				wf.AddStartNode(PositionTemplateNode)
-				wf.AddStartNode(UnClockListNode)
-
-				// 中间节点
-				wf.AddEdge(UnClockListNode, CreateFormNode)
-				wf.AddEdge(CreateFormNode, FillFormSubmitNode)
-				wf.AddEdge(UnClockListNode, GetDetailFormNode)
-				wf.AddEdge(GetDetailFormNode, FillFormSubmitNode)
-				wf.AddEdge(PositionTemplateNode, FillFormSubmitNode)
-
-				// 收尾节点
-				wf.ConnectToEnd(FillFormSubmitNode)
-
-				// 数据
-				var completedAction map[string]interface{}
-				completedAction = make(map[string]interface{})
-				completedAction["loginBrowser"] = loginBrowser
-
-				ctx, _ := context.WithCancel(context.Background())
-				wf.StartWithContext(ctx, completedAction)
-				wf.WaitDone()
+				<-pool
+				go func() {
+					wg.Add(1)
+					clockWf(loginBrowser)
+					wg.Done()
+				}()
 				count++
 			}
 		}
@@ -135,7 +122,43 @@ func (a *GetLoginBrowserAction) Run(i interface{}) {
 
 	log.Println("[核心程序加载] [完成]")
 	wg.Wait()
-	fmt.Println("执行其他逻辑2")
+	fmt.Println("[本次打卡结束!]")
+}
+
+// 创建工作流进行打卡
+func clockWf(loginBrowser interface{}) {
+	// 获取一个浏览器对象，发送数据到数据流中
+	wf := workflow.NewWorkFlow()
+	// 构建节点
+	PositionTemplateNode := workflow.NewNode(&PositionTemplateAction{}) // 获取位置模板
+	UnClockListNode := workflow.NewNode(&UnClockListAction{})           // 获取未打卡的列表
+	CreateFormNode := workflow.NewNode(&CreateFormAction{})             // 获取打卡表单信息
+	GetDetailFormNode := workflow.NewNode(&GetDetailFormAction{})       // 获取更为详细的表单信息
+	FillFormSubmitNode := workflow.NewNode(&FillFormSubmitAction{})     // 填写打卡表单并提交
+
+	// 构建节点之间的关系
+	// 启始节点
+	wf.AddStartNode(PositionTemplateNode)
+	wf.AddStartNode(UnClockListNode)
+
+	// 中间节点
+	wf.AddEdge(UnClockListNode, CreateFormNode)
+	wf.AddEdge(CreateFormNode, FillFormSubmitNode)
+	wf.AddEdge(UnClockListNode, GetDetailFormNode)
+	wf.AddEdge(GetDetailFormNode, FillFormSubmitNode)
+	wf.AddEdge(PositionTemplateNode, FillFormSubmitNode)
+
+	// 收尾节点
+	wf.ConnectToEnd(FillFormSubmitNode)
+
+	// 数据
+	var completedAction map[string]interface{}
+	completedAction = make(map[string]interface{})
+	completedAction["loginBrowser"] = loginBrowser
+
+	ctx, _ := context.WithCancel(context.Background())
+	wf.StartWithContext(ctx, completedAction)
+	wf.WaitDone()
 }
 
 // EndAction 功能拓展占位

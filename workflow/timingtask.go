@@ -1,8 +1,8 @@
-package crontask
+package workflow
 
 import (
 	"Yiban3/browser/config"
-	"Yiban3/schedule"
+	"Yiban3/workflow/action/utils"
 	"fmt"
 	"github.com/robfig/cron/v3"
 	"log"
@@ -11,6 +11,22 @@ import (
 	"sync"
 	"time"
 )
+
+/*
+	定时任务系统
+*/
+
+type CronTaskSystemAction struct {
+	once sync.Once // 限制只能被执行一次
+}
+
+func (a *CronTaskSystemAction) Run(i interface{}) {
+	// 执行定时任务 只能执行一次
+	a.once.Do(func() {
+		fmt.Println("[定时任务系统启动...]")
+		cronRun()
+	})
+}
 
 func cronTaskCreate() (*cron.Cron, error) {
 	c := cron.New(cron.WithChain())
@@ -35,18 +51,17 @@ func cronTaskCreate() (*cron.Cron, error) {
 
 	spec := fmt.Sprintf("%v %v * * *", perMinuteStr, perHourStr)
 	_, err := c.AddFunc(spec, func() {
-		log.Println(time.Now().Format("2006年01月02日15:04"), "定时打卡任务执行")
+		log.Printf("[%v 定时打卡任务执行]\n", time.Now().Format("2006年01月02日15:04"))
 		log.Println("执行打卡逻辑。。。。。")
-		//schedule.ChanListRunMysql()
 	})
 	if err != nil {
 		return c, err
 	}
-	// 添加剩余天数减一
+	// 每天2点 剩余天数减一
 	spec = fmt.Sprintf("0 2 * * *")
 	_, err = c.AddFunc(spec, func() {
 		log.Println(time.Now().Format("2006年01月02日15:04"), "定时剩余天数减一任务执行")
-		schedule.DayReduce()
+		actionfunc.actionfunc.DayReduce()
 	})
 	if err != nil {
 		return c, err
@@ -55,7 +70,7 @@ func cronTaskCreate() (*cron.Cron, error) {
 	spec = fmt.Sprintf("*/10 9-17 * * *")
 	_, err = c.AddFunc(spec, func() {
 		log.Println(time.Now().Format("2006年01月02日15:04"), "用户数量心跳检测执行")
-		schedule.CheckUser()
+		log.Println("心跳检测执行")
 	})
 	if err != nil {
 		return c, err
@@ -63,7 +78,7 @@ func cronTaskCreate() (*cron.Cron, error) {
 	return c, nil
 }
 
-func CronRun() {
+func cronRun() {
 	var wg sync.WaitGroup
 	// 创建定时任务
 	cronTask, err := cronTaskCreate()

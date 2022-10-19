@@ -88,3 +88,9 @@ retry:
 
 	mysqlcon.Exec(formInsert)
 }
+
+// DayReduce 所有用户剩余天数减一
+func DayReduce() {
+	reduceSql := "UPDATE yiban_yiban set day=day-1 where day>0"
+	mysqlcon.Exec(reduceSql)
+}

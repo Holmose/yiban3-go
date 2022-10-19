@@ -1,13 +1,17 @@
-package workflow
+package action
 
 import (
 	browser "Yiban3/browser/types"
-	"Yiban3/workflow/actionfunc"
+	"Yiban3/workflow/action/utils"
 	"Yiban3/workflow/mychan"
 	"log"
 	"sync"
 	"time"
 )
+
+/*
+	执行初始化操作
+*/
 
 // LoadSystemConfigAction 加载系统配置
 type LoadSystemConfigAction struct{}

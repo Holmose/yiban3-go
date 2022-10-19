@@ -22,7 +22,7 @@ retry:
 	DB.SetMaxIdleConns(10)
 	//验证连接
 	if err := DB.Ping(); err != nil {
-		log.Println("连接数据库失败，等待重连中。。。")
+		log.Println("[Database connection failed.] [Retry...]")
 		time.Sleep(time.Second * 3)
 		retryCount++
 		if retryCount <= 10 {
