@@ -131,7 +131,7 @@ func FetchUnComplete(b *browser.Browser, t browser.Tasks) (d browser.Data, err e
 
 	}
 
-	return d, fmt.Errorf("没有未打卡数据！")
+	return d, fmt.Errorf("未打卡数据不存在！")
 }
 
 // CreateForm 创建打卡表单（获取在服务器已经生成的）

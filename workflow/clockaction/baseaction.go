@@ -3,11 +3,9 @@ package action
 import (
 	"Yiban3/browser/config"
 	browser "Yiban3/browser/types"
-	"Yiban3/workflow/action/utils"
 	"Yiban3/workflow/mychan"
-	"context"
+	"Yiban3/workflow/utils"
 	"fmt"
-	"github.com/Holmose/go-workflow/workflow"
 	"log"
 	"sync"
 	"time"
@@ -51,7 +49,7 @@ func (a *LoginAction) Run(i interface{}) {
 					go func() {
 						// 登录并添加数据到数据库
 						b := brow.(browser.Browser)
-						err := actionfunc.LoginAddVerifyToMysql(&b)
+						err := utils.LoginAddVerifyToMysql(&b)
 						if err != nil {
 							fmt.Println(err)
 						} else {
@@ -76,7 +74,9 @@ func (a *LoginAction) Run(i interface{}) {
 }
 
 // GetLoginBrowserAction 获取浏览器对象执行打卡任务
-type GetLoginBrowserAction struct{}
+type GetLoginBrowserAction struct {
+	ClockWorkflow func(interface{}) // 执行创建的打卡流
+}
 
 func (a *GetLoginBrowserAction) Run(i interface{}) {
 	datas := i.(map[string]interface{})
@@ -112,58 +112,21 @@ func (a *GetLoginBrowserAction) Run(i interface{}) {
 				<-pool
 				go func() {
 					wg.Add(1)
-					clockWf(loginBrowser)
+					a.ClockWorkflow(loginBrowser)
 					wg.Done()
 				}()
 				count++
 			}
 		}
 	}()
-
 	log.Println("[核心程序加载] [完成]")
 	wg.Wait()
-	fmt.Println("[本次打卡结束!]")
-}
-
-// 创建工作流进行打卡
-func clockWf(loginBrowser interface{}) {
-	// 获取一个浏览器对象，发送数据到数据流中
-	wf := workflow.NewWorkFlow()
-	// 构建节点
-	PositionTemplateNode := workflow.NewNode(&PositionTemplateAction{}) // 获取位置模板
-	UnClockListNode := workflow.NewNode(&UnClockListAction{})           // 获取未打卡的列表
-	CreateFormNode := workflow.NewNode(&CreateFormAction{})             // 获取打卡表单信息
-	GetDetailFormNode := workflow.NewNode(&GetDetailFormAction{})       // 获取更为详细的表单信息
-	FillFormSubmitNode := workflow.NewNode(&FillFormSubmitAction{})     // 填写打卡表单并提交
-
-	// 构建节点之间的关系
-	// 启始节点
-	wf.AddStartNode(PositionTemplateNode)
-	wf.AddStartNode(UnClockListNode)
-
-	// 中间节点
-	wf.AddEdge(UnClockListNode, CreateFormNode)
-	wf.AddEdge(CreateFormNode, FillFormSubmitNode)
-	wf.AddEdge(UnClockListNode, GetDetailFormNode)
-	wf.AddEdge(GetDetailFormNode, FillFormSubmitNode)
-	wf.AddEdge(PositionTemplateNode, FillFormSubmitNode)
-
-	// 收尾节点
-	wf.ConnectToEnd(FillFormSubmitNode)
-
-	// 数据
-	var completedAction map[string]interface{}
-	completedAction = make(map[string]interface{})
-	completedAction["loginBrowser"] = loginBrowser
-
-	ctx, _ := context.WithCancel(context.Background())
-	wf.StartWithContext(ctx, completedAction)
-	wf.WaitDone()
+	log.Println("[本次打卡结束!]")
 }
 
 // EndAction 功能拓展占位
 type EndAction struct{}
 
 func (a *EndAction) Run(i interface{}) {
-	fmt.Println("[功能拓展占位]")
+	log.Println("[功能拓展占位]")
 }

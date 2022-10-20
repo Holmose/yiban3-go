@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Yiban3/workflow/TaskClockRun"
+	"Yiban3/execute"
 	"io"
 	"log"
 	"os"
@@ -22,5 +22,5 @@ func init() {
 }
 
 func main() {
-	TaskClockRun.TaskClockRun()
+	execute.TimingExec()
 }

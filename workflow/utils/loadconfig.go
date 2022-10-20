@@ -1,4 +1,4 @@
-package actionfunc
+package utils
 
 import (
 	"Yiban3/browser/config"

@@ -6,7 +6,7 @@ import (
 	"Yiban3/browser/tasks/clock"
 	browser "Yiban3/browser/types"
 	"Yiban3/email"
-	"Yiban3/workflow/action/utils"
+	"Yiban3/workflow/utils"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -69,7 +69,7 @@ retry:
 
 	unComplete, err := baseaction.FetchUnComplete(&b, unCompleteList)
 	if err != nil {
-		if !strings.Contains(err.Error(), "没有未打卡数据") {
+		if !strings.Contains(err.Error(), "未打卡数据不存在") {
 			log.Println(err)
 		}
 		log.Printf("[[ 用户：%v %v ]]", b.User.Username, err)
@@ -177,10 +177,10 @@ func (a *FillFormSubmitAction) Run(i interface{}) {
 		clockResult = fmt.Sprintf("打卡成功！")
 	}
 	// 插入任务结果到数据库中
-	go actionfunc.InsertTask(&b, detail, position, ret)
+	go utils.InsertTask(&b, detail, position, ret)
 	// 发送邮件进行提示
 	// 插入打卡模板到数据库中 TODO 便于后期无法获取模板时使用
-	go actionfunc.InsertForm(&b, position, completeDetail)
+	go utils.InsertForm(&b, position, completeDetail)
 	email.YiSend(&b, detail, clockResult, position)
 	log.Printf("[用户：%v, 打卡结束！------]", b.User.Username)
 }

@@ -1,9 +1,9 @@
-package action
+package initialize
 
 import (
 	browser "Yiban3/browser/types"
-	"Yiban3/workflow/action/utils"
 	"Yiban3/workflow/mychan"
+	"Yiban3/workflow/utils"
 	"log"
 	"sync"
 	"time"
@@ -17,7 +17,7 @@ import (
 type LoadSystemConfigAction struct{}
 
 func (a *LoadSystemConfigAction) Run(i interface{}) {
-	err := actionfunc.LoadSystemConfig("config/config.json")
+	err := utils.LoadSystemConfig("config/config.json")
 	if err != nil {
 		log.Panic("[加载系统配置] [失败]", err.Error())
 	} else {
@@ -34,7 +34,7 @@ func (a *NewUserChanAction) Run(i interface{}) {
 	var userChan *mychan.YibanChan
 
 	userChan = mychan.NewYibanChan()
-	go actionfunc.QueryYibanUserToQ(userChan, &userCount)
+	go utils.QueryYibanUserToQ(userChan, &userCount)
 
 	// 传递数据
 	datas := i.(map[string]interface{})
