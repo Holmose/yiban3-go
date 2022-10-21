@@ -16,8 +16,8 @@ func QueryYibanUserToQ(userChan *mychan.YibanChan, userCount *[]int) {
 retry:
 	// status 0 为否 false，不是假期
 	userTotal := "SELECT COUNT(*) FROM yiban_yiban where day>0;"
-	rst, ok := mysqlcon.Query(userTotal)
-	if !ok {
+	rst, err := mysqlcon.Query(userTotal)
+	if err != nil {
 		log.Println("[Database connection failed.] [Retry...]")
 		retryCount++
 		if retryCount <= 10 {
@@ -36,8 +36,8 @@ retry:
 	// 获取分多少页
 	pageCount := fmt.Sprintf(
 		"select ceil(count(*)/%v) as pageTotal from yiban_yiban where day>0;", pageNum)
-	rst, ok = mysqlcon.Query(pageCount)
-	if !ok {
+	rst, err = mysqlcon.Query(pageCount)
+	if err != nil {
 		log.Println("[Failed to obtain paging data. ] [Trying again...]")
 		retryCount++
 		if retryCount <= 10 {
@@ -51,8 +51,8 @@ retry:
 		pageMsg := fmt.Sprintf(
 			"select * from yiban_yiban where day>0 limit %v offset %v;",
 			pageNum, i*pageNum)
-		rst, ok = mysqlcon.Query(pageMsg)
-		if !ok {
+		rst, err = mysqlcon.Query(pageMsg)
+		if err != nil {
 			log.Println("[Failed to obtain paging data. ] [Trying again...]")
 			retryCount++
 			if retryCount <= 10 {

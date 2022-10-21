@@ -3,7 +3,6 @@ package utils
 import (
 	"Yiban3/browser/config"
 	"encoding/json"
-	"log"
 	"os"
 )
 
@@ -12,7 +11,7 @@ func LoadSystemConfig(path string) error {
 	file, err := os.Open(path)
 	defer file.Close()
 	if err != nil {
-		log.Panic(err)
+		return err
 	}
 	var conf config.ConfigS
 	decoder := json.NewDecoder(file)

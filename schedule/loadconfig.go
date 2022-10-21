@@ -17,6 +17,7 @@ func AddUserToQ() {
 	file, err := os.Open("config/userinfo.json")
 	defer file.Close()
 	if err != nil {
+		// 配置文件读取失败，直接退出
 		log.Panic(err)
 	}
 	var userInfo []browser.User
@@ -37,15 +38,15 @@ func CheckUser() {
 retry:
 	// status 0 为否 false，不是假期
 	userTotal := "SELECT COUNT(*) FROM yiban_yiban where day>0;"
-	rst, ok := mysqlcon.Query(userTotal)
-	if ok {
-		fmt.Println("用户数量心跳检测！", rst[0]["COUNT(*)"])
-	} else {
+	rst, err := mysqlcon.Query(userTotal)
+	if err != nil {
 		log.Println("没有找到数据!")
 		retryCount++
 		if retryCount <= 10 {
 			goto retry
 		}
+	} else {
+		fmt.Println("用户数量心跳检测！", rst[0]["COUNT(*)"])
 	}
 	count, err := strconv.Atoi(rst[0]["COUNT(*)"])
 	if err != nil {
@@ -65,15 +66,15 @@ func AddUserToQByMysql() {
 retry:
 	// status 0 为否 false，不是假期
 	userTotal := "SELECT COUNT(*) FROM yiban_yiban where day>0;"
-	rst, ok := mysqlcon.Query(userTotal)
-	if ok {
-		log.Println("获取数据成功！")
-	} else {
+	rst, err := mysqlcon.Query(userTotal)
+	if err != nil {
 		log.Println("没有找到数据!")
 		retryCount++
 		if retryCount <= 10 {
 			goto retry
 		}
+	} else {
+		log.Println("获取数据成功！")
 	}
 	count, err := strconv.Atoi(rst[0]["COUNT(*)"])
 	if err != nil {
@@ -86,8 +87,8 @@ retry:
 	// 获取分多少页
 	pageCount := fmt.Sprintf(
 		"select ceil(count(*)/%v) as pageTotal from yiban_yiban where day>0;", pageNum)
-	rst, ok = mysqlcon.Query(pageCount)
-	if !ok {
+	rst, err = mysqlcon.Query(pageCount)
+	if err != nil {
 		log.Println("没有找到数据!")
 		retryCount++
 		if retryCount <= 10 {
@@ -100,8 +101,8 @@ retry:
 		pageMsg := fmt.Sprintf(
 			"select * from yiban_yiban where day>0 limit %v offset %v;",
 			pageNum, i*pageNum)
-		rst, ok = mysqlcon.Query(pageMsg)
-		if ok {
+		rst, err = mysqlcon.Query(pageMsg)
+		if err != nil {
 			log.Println("获取分页数据成功！", i*pageNum)
 		} else {
 			log.Println("没有找到数据!")
@@ -148,6 +149,7 @@ func loadSysconf() {
 	file, err := os.Open("config/config.json")
 	defer file.Close()
 	if err != nil {
+		// 配置文件读取失败，直接退出
 		log.Panic(err)
 	}
 	var conf config.ConfigS

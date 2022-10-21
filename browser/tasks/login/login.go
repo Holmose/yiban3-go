@@ -64,7 +64,7 @@ FirstAuth:
 	}
 	form, err := b.Client.PostForm(postUrl, params)
 	if err != nil {
-		log.Panic(err)
+		return nil, err
 	} else {
 		log.Printf("用户：%v, 提交登录表单成功！", user.Username)
 	}
@@ -177,7 +177,7 @@ func AuthSecond(b *browser.Browser, user *browser.User) ([]byte, error) {
 	var resJson interface{}
 	err = json.Unmarshal(bytes, &resJson)
 	if err != nil {
-		log.Panic(err)
+		return nil, err
 	}
 
 	strLen := len(string(bytes))

@@ -245,12 +245,12 @@ func InsertTask(b *browser.Browser,
 	defer wg.Done()
 	// 查询用户在数据库中的ID
 	idSelect := fmt.Sprintf("select id from yiban_yiban where username=%s", b.User.Username)
-	rst, ok := mysqlcon.Query(idSelect)
-	if ok {
-		log.Println("获取用户数据成功！")
-	} else {
+	rst, err := mysqlcon.Query(idSelect)
+	if err != nil {
 		log.Println("没有找到数据!")
 		return
+	} else {
+		log.Println("获取用户数据成功！")
 	}
 	clockStatus := 0
 	var clockResult string
@@ -277,12 +277,12 @@ func InsertForm(b *browser.Browser,
 	defer wg.Done()
 	// 查询用户在数据库中的ID
 	idSelect := fmt.Sprintf("select id from yiban_yiban where username=%s", b.User.Username)
-	rst, ok := mysqlcon.Query(idSelect)
-	if ok {
-		log.Println("获取用户数据成功！")
-	} else {
+	rst, err := mysqlcon.Query(idSelect)
+	if err != nil {
 		log.Println("没有找到数据!")
 		return
+	} else {
+		log.Println("获取用户数据成功！")
 	}
 	// 是假期为0，不是假期为1
 	isHolidayNum := 0

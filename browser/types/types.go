@@ -169,6 +169,7 @@ func CreateBrowser(b *Browser, user User) {
 	// 定义client，并使用cookie自动管理cookie
 	jar, err := cookiejar.New(nil)
 	if err != nil {
+		// 初始化浏览器失败直接退出
 		log.Panic(err)
 	}
 	client := &http.Client{

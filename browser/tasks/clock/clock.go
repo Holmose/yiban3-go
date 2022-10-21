@@ -20,8 +20,9 @@ func GetCompleteByLocation(b *browser.Browser, position string) (c browser.Compl
 	// 获取3条打卡成功列表
 	completeList, err := baseaction.GetCompleteList(b, config.CompleteTemplateDelta)
 	if err != nil {
-		log.Panicf("用户：%v 获取打卡成功列表失败！", b.User.Username)
-		return c, err
+		return c, errors.New(
+			fmt.Sprintf(
+				"用户：%v 获取打卡成功列表失败！%v", b.User.Username, err))
 	}
 
 	lenCom := len(completeList.Data)

@@ -3,6 +3,7 @@ package mysqlcon
 import (
 	"Yiban3/browser/config"
 	"database/sql"
+	"errors"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"time"
@@ -47,13 +48,13 @@ func Exec(SQL string) {
 	}
 }
 
-func Query(SQL string) ([]map[string]string, bool) { //通用查询寒素
+func Query(SQL string) ([]map[string]string, error) { //通用查询寒素
 	if initDB() != true { //连接数据库
-		return nil, false
+		return nil, errors.New("连接数据库失败")
 	}
 	rows, err := DB.Query(SQL) //执行SQL语句，比如select * from users
 	if err != nil {
-		log.Panic(err)
+		return nil, err
 	}
 	columns, _ := rows.Columns()            //获取列的信息
 	count := len(columns)                   //列的数量
@@ -67,7 +68,7 @@ func Query(SQL string) ([]map[string]string, bool) { //通用查询寒素
 		err := rows.Scan(values...)  //开始读行，Scan函数只接受指针变量
 		m := make(map[string]string) //用于存放1列的 [键/值] 对
 		if err != nil {
-			log.Panic(err)
+			return nil, err
 		}
 		for i, colName := range columns {
 			var raw_value = *(values[i].(*interface{})) //读出raw数据，类型为byte
@@ -81,7 +82,7 @@ func Query(SQL string) ([]map[string]string, bool) { //通用查询寒素
 	defer rows.Close()
 
 	if len(ret) != 0 {
-		return ret, true
+		return ret, nil
 	}
-	return nil, false
+	return nil, errors.New("数据解析失败")
 }

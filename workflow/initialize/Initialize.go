@@ -50,6 +50,7 @@ func (a *NewBrowserChanAction) Run(i interface{}) {
 	userCount := datas["userCount"].(*[]int)
 	for {
 		if len(*userCount) > 0 {
+			log.Printf("[当前有效用户数：%v人]", (*userCount)[0])
 			break
 		}
 		time.Sleep(time.Millisecond * 50)

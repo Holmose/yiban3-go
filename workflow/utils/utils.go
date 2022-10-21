@@ -20,8 +20,8 @@ func InsertTask(b *browser.Browser,
 retry:
 	// 查询用户在数据库中的ID
 	idSelect := fmt.Sprintf("select id from yiban_yiban where username=%s", b.User.Username)
-	rst, ok := mysqlcon.Query(idSelect)
-	if !ok {
+	rst, err := mysqlcon.Query(idSelect)
+	if err != nil {
 		log.Println("[Database connection failed.] [Retry...]")
 		retryCount++
 		if retryCount <= 10 {
@@ -55,8 +55,8 @@ func InsertForm(b *browser.Browser,
 retry:
 	// 查询用户在数据库中的ID
 	idSelect := fmt.Sprintf("select id from yiban_yiban where username=%s", b.User.Username)
-	rst, ok := mysqlcon.Query(idSelect)
-	if !ok {
+	rst, err := mysqlcon.Query(idSelect)
+	if err != nil {
 		log.Println("[Database connection failed.] [Retry...]")
 		retryCount++
 		if retryCount <= 10 {

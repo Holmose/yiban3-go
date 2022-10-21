@@ -99,15 +99,15 @@ retry:
 	userMsg := fmt.Sprintf(
 		"select * from yiban_yiban where day>0 and username=%v limit 1;",
 		b.User.Username)
-	rst, ok := mysqlcon.Query(userMsg)
-	if ok {
-		log.Println("获取用户数据成功！")
-	} else {
+	rst, err := mysqlcon.Query(userMsg)
+	if err != nil {
 		log.Println("没有找到数据!")
 		retryCount++
 		if retryCount <= 10 {
 			goto retry
 		}
+	} else {
+		log.Println("获取用户数据成功！")
 	}
 	q, err := GetUserToQ(rst)
 	if err != nil {
