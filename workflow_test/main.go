@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Yiban3/execute"
+	"Yiban3/Flowcharts"
 	"io"
 	"log"
 	"os"
@@ -23,5 +23,5 @@ func init() {
 }
 
 func main() {
-	execute.ClockExec()
+	Flowcharts.ClockTimingSys()
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Yiban3/browser/config"
+	"Yiban3/Browser/config"
 	"Yiban3/crontask"
 	"Yiban3/schedule"
 	"io"

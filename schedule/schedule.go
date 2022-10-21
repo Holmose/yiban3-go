@@ -1,9 +1,9 @@
 package schedule
 
 import (
-	"Yiban3/browser/config"
-	"Yiban3/browser/types"
-	"Yiban3/mysqlcon"
+	"Yiban3/Browser/config"
+	"Yiban3/Browser/types"
+	"Yiban3/MysqlConnect"
 	"fmt"
 	"github.com/robfig/cron/v3"
 	"log"
@@ -99,7 +99,7 @@ retry:
 	userMsg := fmt.Sprintf(
 		"select * from yiban_yiban where day>0 and username=%v limit 1;",
 		b.User.Username)
-	rst, err := mysqlcon.Query(userMsg)
+	rst, err := MysqlConnect.Query(userMsg)
 	if err != nil {
 		log.Println("没有找到数据!")
 		retryCount++

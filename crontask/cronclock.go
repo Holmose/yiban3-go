@@ -1,7 +1,7 @@
 package crontask
 
 import (
-	"Yiban3/browser/config"
+	"Yiban3/Browser/config"
 	"Yiban3/schedule"
 	"fmt"
 	"github.com/robfig/cron/v3"

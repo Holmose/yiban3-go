@@ -1,15 +1,15 @@
 package schedule
 
 import (
-	"Yiban3/browser/config"
-	"Yiban3/browser/fetcher"
-	"Yiban3/browser/tasks/baseaction"
-	"Yiban3/browser/tasks/clock"
-	"Yiban3/browser/tasks/login"
-	"Yiban3/browser/types"
-	"Yiban3/ecryption/yiban"
-	"Yiban3/email"
-	"Yiban3/mysqlcon"
+	"Yiban3/Browser/config"
+	"Yiban3/Browser/fetcher"
+	"Yiban3/Browser/tasks/baseaction"
+	"Yiban3/Browser/tasks/clock"
+	"Yiban3/Browser/tasks/login"
+	"Yiban3/Browser/types"
+	"Yiban3/Ecryption/yiban"
+	"Yiban3/Email"
+	"Yiban3/MysqlConnect"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -66,7 +66,7 @@ func ChanListRunMysql() {
 // 所有用户剩余天数减一
 func DayReduce() {
 	reduceSql := "UPDATE yiban_yiban set day=day-1 where day>0"
-	mysqlcon.Exec(reduceSql)
+	MysqlConnect.Exec(reduceSql)
 }
 
 // LoginAddVerifyToMysql 登录并添加数据到数据库
@@ -85,7 +85,7 @@ retry:
 	if verifyISNil {
 		sql := fmt.Sprintf(
 			"UPDATE yiban_yiban set verify=\"%s\" where username=\"%s\" ", b.User.Verify, b.User.Username)
-		mysqlcon.Exec(sql)
+		MysqlConnect.Exec(sql)
 	}
 	return nil
 
@@ -117,7 +117,7 @@ func Run(b *browser.Browser) {
 				bodyMail := fmt.Sprintf(
 					"<h2>账号：%v 获取一个在%v 的打卡模板失败，请至少保证最近几天在该位置有打卡记录！</h2>",
 					b.User.Username, b.User.Position)
-				email.YiTips([]string{b.User.Mail},
+				Email.YiTips([]string{b.User.Mail},
 					bodyMail)
 			}
 		}
@@ -233,7 +233,7 @@ func Run(b *browser.Browser) {
 	// 发送邮件进行提示
 	// 插入打卡模板到数据库中 TODO 便于后期无法获取模板时使用
 	go InsertForm(b, position, completeDetail)
-	email.YiSend(b, detail, clockResult, position)
+	Email.YiSend(b, detail, clockResult, position)
 	log.Printf("用户：%v, 打卡结束！------", b.User.Username)
 }
 
@@ -245,7 +245,7 @@ func InsertTask(b *browser.Browser,
 	defer wg.Done()
 	// 查询用户在数据库中的ID
 	idSelect := fmt.Sprintf("select id from yiban_yiban where username=%s", b.User.Username)
-	rst, err := mysqlcon.Query(idSelect)
+	rst, err := MysqlConnect.Query(idSelect)
 	if err != nil {
 		log.Println("没有找到数据!")
 		return
@@ -268,7 +268,7 @@ func InsertTask(b *browser.Browser,
 		rst[0]["id"], detail.Data.Title, position.Address, clockStatus,
 		fmt.Sprintf("(%v, %v)", position.Longitude, position.Latitude),
 		clockResult, time.Now().Format("2006-01-02 15:04"))
-	mysqlcon.Exec(taskInsert)
+	MysqlConnect.Exec(taskInsert)
 }
 
 func InsertForm(b *browser.Browser,
@@ -277,7 +277,7 @@ func InsertForm(b *browser.Browser,
 	defer wg.Done()
 	// 查询用户在数据库中的ID
 	idSelect := fmt.Sprintf("select id from yiban_yiban where username=%s", b.User.Username)
-	rst, err := mysqlcon.Query(idSelect)
+	rst, err := MysqlConnect.Query(idSelect)
 	if err != nil {
 		log.Println("没有找到数据!")
 		return
@@ -306,7 +306,7 @@ func InsertForm(b *browser.Browser,
 		rst[0]["id"], completeDetail.Data.WFName, position.Address, formEncrypt,
 		time.Now().Format("2006-01-02 15:04"), isHolidayNum)
 
-	mysqlcon.Exec(formInsert)
+	MysqlConnect.Exec(formInsert)
 }
 func WriteUserinfo(userConfigList []browser.User) {
 	by, err := json.Marshal(userConfigList)

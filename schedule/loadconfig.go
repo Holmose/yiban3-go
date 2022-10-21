@@ -1,9 +1,9 @@
 package schedule
 
 import (
-	"Yiban3/browser/config"
-	"Yiban3/browser/types"
-	"Yiban3/mysqlcon"
+	"Yiban3/Browser/config"
+	"Yiban3/Browser/types"
+	"Yiban3/MysqlConnect"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -38,7 +38,7 @@ func CheckUser() {
 retry:
 	// status 0 为否 false，不是假期
 	userTotal := "SELECT COUNT(*) FROM yiban_yiban where day>0;"
-	rst, err := mysqlcon.Query(userTotal)
+	rst, err := MysqlConnect.Query(userTotal)
 	if err != nil {
 		log.Println("没有找到数据!")
 		retryCount++
@@ -66,7 +66,7 @@ func AddUserToQByMysql() {
 retry:
 	// status 0 为否 false，不是假期
 	userTotal := "SELECT COUNT(*) FROM yiban_yiban where day>0;"
-	rst, err := mysqlcon.Query(userTotal)
+	rst, err := MysqlConnect.Query(userTotal)
 	if err != nil {
 		log.Println("没有找到数据!")
 		retryCount++
@@ -87,7 +87,7 @@ retry:
 	// 获取分多少页
 	pageCount := fmt.Sprintf(
 		"select ceil(count(*)/%v) as pageTotal from yiban_yiban where day>0;", pageNum)
-	rst, err = mysqlcon.Query(pageCount)
+	rst, err = MysqlConnect.Query(pageCount)
 	if err != nil {
 		log.Println("没有找到数据!")
 		retryCount++
@@ -101,7 +101,7 @@ retry:
 		pageMsg := fmt.Sprintf(
 			"select * from yiban_yiban where day>0 limit %v offset %v;",
 			pageNum, i*pageNum)
-		rst, err = mysqlcon.Query(pageMsg)
+		rst, err = MysqlConnect.Query(pageMsg)
 		if err != nil {
 			log.Println("获取分页数据成功！", i*pageNum)
 		} else {

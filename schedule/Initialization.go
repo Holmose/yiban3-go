@@ -1,7 +1,7 @@
 package schedule
 
 import (
-	"Yiban3/browser/types"
+	"Yiban3/Browser/types"
 	"log"
 	"time"
 )
