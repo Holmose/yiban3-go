@@ -25,12 +25,12 @@ func (a *LoginAction) Run(i interface{}) {
 		time.Sleep(time.Millisecond * 50)
 	}
 
-	browserChan := datas["browserChan"].(*browser.YibanChan)
+	browserChan := datas["browserChan"].(*utils.YibanChan)
 	userCount := *(datas["userCount"].(*[]int))
 
 	var wg sync.WaitGroup
-	var loginChan *browser.YibanChan
-	loginChan = browser.NewYibanChan()
+	var loginChan *utils.YibanChan
+	loginChan = utils.NewYibanChan()
 
 	wg.Add(1)
 	go func() {
@@ -84,7 +84,7 @@ func (a *GetLoginBrowserAction) Run(i interface{}) {
 		}
 		time.Sleep(time.Millisecond * 50)
 	}
-	loginChan := datas["loginChan"].(*browser.YibanChan)
+	loginChan := datas["loginChan"].(*utils.YibanChan)
 	userCount := *(datas["userCount"].(*[]int))
 
 	var wg sync.WaitGroup

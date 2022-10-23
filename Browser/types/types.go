@@ -159,6 +159,13 @@ type Position struct {
 	Time      string  `json:"time"`
 }
 
+type ChanData struct {
+	FormChan           chan FormTask
+	DetailChan         chan Detail
+	CompleteDetailChan chan CompleteDetail
+	UnCompleteChan     chan Data
+}
+
 func CreateBrowser(b *Browser, user User) {
 	// 定义client，并使用cookie自动管理cookie
 	jar, err := cookiejar.New(nil)

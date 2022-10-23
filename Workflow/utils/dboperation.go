@@ -36,7 +36,7 @@ retry:
 }
 
 // QueryYibanUserToQ 分页查询用户数据
-func QueryYibanUserToQ(userChan *browser.YibanChan, userCount *[]int) {
+func QueryYibanUserToQ(userChan *YibanChan, userCount *[]int) {
 	retryCount := 0
 retry:
 	// status 0 为否 false，不是假期

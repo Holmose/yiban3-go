@@ -83,8 +83,7 @@ retry:
 			log.Println(err)
 		}
 		log.Printf("[[ 用户：%v %v ]]", b.User.Username, err)
-		// TODO 会重复关闭
-		close(b.ChanData.UnCompleteChan)
+		utils.SafeClose(b.ChanData.UnCompleteChan)
 		return
 	} else {
 		// 用于获取打卡表单信息
@@ -102,7 +101,7 @@ func (a *CreateFormAction) Run(i interface{}) {
 
 	unComplete, ok := <-b.ChanData.UnCompleteChan
 	if !ok {
-		close(b.ChanData.FormChan)
+		utils.SafeClose(b.ChanData.FormChan)
 		return
 	} else {
 		form, err := baseaction.CreateForm(&b, unComplete)
@@ -129,7 +128,7 @@ func (a *GetDetailFormAction) Run(i interface{}) {
 		}
 		b.ChanData.DetailChan <- detail
 	} else {
-		close(b.ChanData.DetailChan)
+		utils.SafeClose(b.ChanData.DetailChan)
 	}
 }
 

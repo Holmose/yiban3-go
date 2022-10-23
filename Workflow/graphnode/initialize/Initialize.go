@@ -30,8 +30,8 @@ type NewUserChanAction struct{}
 func (a *NewUserChanAction) Run(i interface{}) {
 	log.Println("[开始获取后端数据]")
 	var userCount []int
-	var userChan *browser.YibanChan
-	userChan = browser.NewYibanChan()
+	var userChan *utils.YibanChan
+	userChan = utils.NewYibanChan()
 
 	go utils.QueryYibanUserToQ(userChan, &userCount)
 
@@ -54,12 +54,12 @@ func (a *NewBrowserChanAction) Run(i interface{}) {
 		}
 		time.Sleep(time.Millisecond * 50)
 	}
-	userChan := datas["userChan"].(*browser.YibanChan)
+	userChan := datas["userChan"].(*utils.YibanChan)
 
 	var wg sync.WaitGroup
 
-	var browserChan *browser.YibanChan
-	browserChan = browser.NewYibanChan()
+	var browserChan *utils.YibanChan
+	browserChan = utils.NewYibanChan()
 
 	wg.Add(1)
 	go func() {
