@@ -35,12 +35,6 @@ type Browser struct {
 	User     User
 	ChanData ChanData
 }
-type ChanData struct {
-	FormChan           chan FormTask
-	DetailChan         chan Detail
-	CompleteDetailChan chan CompleteDetail
-	UnCompleteChan     chan Data
-}
 
 // Tasks 打卡任务列表
 type Tasks struct {

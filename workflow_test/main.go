@@ -2,6 +2,7 @@ package main
 
 import (
 	"Yiban3/Flowcharts"
+	"flag"
 	"io"
 	"log"
 	"os"
@@ -22,6 +23,15 @@ func init() {
 	log.SetOutput(multiWriter)
 }
 
+var (
+	clockNow = flag.Bool(
+		"clock_now", false, "-clock_now=true | 启动时全部用户执行一次打卡操作")
+)
+
 func main() {
+	flag.Parse()
+	if *clockNow {
+		Flowcharts.ClockOnce()
+	}
 	Flowcharts.ClockTimingSys()
 }

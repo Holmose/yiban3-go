@@ -19,7 +19,7 @@ import (
 var (
 	// 打卡配置
 	CSRF                     = "302ec8bc6a82d6bbf0ce37b7392d429e"
-	MaxNum                   = 3
+	MaxNum                   = 10
 	ShowSecond time.Duration = 5
 	// CompleteTemplateDelta 获取最近几天的打卡模板
 	CompleteTemplateDelta = 8

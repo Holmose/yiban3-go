@@ -2,7 +2,6 @@ package initialize
 
 import (
 	browser "Yiban3/Browser/types"
-	"Yiban3/Workflow/types"
 	"Yiban3/Workflow/utils"
 	"log"
 	"sync"
@@ -31,9 +30,9 @@ type NewUserChanAction struct{}
 func (a *NewUserChanAction) Run(i interface{}) {
 	log.Println("[开始获取后端数据]")
 	var userCount []int
-	var userChan *types.YibanChan
+	var userChan *browser.YibanChan
+	userChan = browser.NewYibanChan()
 
-	userChan = types.NewYibanChan()
 	go utils.QueryYibanUserToQ(userChan, &userCount)
 
 	// 传递数据
@@ -55,12 +54,12 @@ func (a *NewBrowserChanAction) Run(i interface{}) {
 		}
 		time.Sleep(time.Millisecond * 50)
 	}
-	userChan := datas["userChan"].(*types.YibanChan)
+	userChan := datas["userChan"].(*browser.YibanChan)
 
 	var wg sync.WaitGroup
 
-	var browserChan *types.YibanChan
-	browserChan = types.NewYibanChan()
+	var browserChan *browser.YibanChan
+	browserChan = browser.NewYibanChan()
 
 	wg.Add(1)
 	go func() {

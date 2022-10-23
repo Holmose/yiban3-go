@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -82,6 +83,7 @@ retry:
 			log.Println(err)
 		}
 		log.Printf("[[ 用户：%v %v ]]", b.User.Username, err)
+		// TODO 会重复关闭
 		close(b.ChanData.UnCompleteChan)
 		return
 	} else {
@@ -112,7 +114,9 @@ func (a *CreateFormAction) Run(i interface{}) {
 }
 
 // GetDetailFormAction 获取更为详细的表单信息
-type GetDetailFormAction struct{}
+type GetDetailFormAction struct {
+	once sync.Once // 确保只会关闭一次
+}
 
 func (a *GetDetailFormAction) Run(i interface{}) {
 	b := getBrowser(i)

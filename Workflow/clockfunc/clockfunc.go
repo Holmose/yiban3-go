@@ -5,6 +5,10 @@ import (
 	"Yiban3/Workflow/graphnode"
 	"context"
 	"github.com/Holmose/go-workflow/workflow"
+	"github.com/robfig/cron/v3"
+	"log"
+	"sync"
+	"time"
 )
 
 /*
@@ -64,4 +68,32 @@ func ClockWorkflowFilter(loginBrowser interface{}) {
 	} else {
 		ClockWorkflow(loginBrowser)
 	}
+}
+
+// ClockWorkflowCronSingle 根据个人定时创建定时任务
+func ClockWorkflowCronSingle(loginBrowser interface{}) {
+	// 判断是否存在cron配置
+	b := loginBrowser.(browser.Browser)
+	if b.User.Crontab == "" {
+		return
+	}
+	// 创建定时任务
+	var wg sync.WaitGroup
+	spec := b.User.Crontab
+	c := cron.New(cron.WithChain())
+	_, err := c.AddFunc(spec, func() {
+		log.Printf("[%v 用户：%v个人定时打卡任务执行]",
+			time.Now().Format("2006年01月02日15:04"), b.User.Username)
+		ClockWorkflow(loginBrowser)
+	})
+	if err != nil {
+		log.Printf("[用户：%v 个人定时任务创建失败]", b.User.Username)
+	} else {
+		log.Printf("[用户：%v 个人定时任务创建成功，等待执行中...]", b.User.Username)
+		wg.Add(1)
+		defer wg.Done()
+		c.Start()
+		defer c.Stop()
+	}
+	wg.Wait()
 }

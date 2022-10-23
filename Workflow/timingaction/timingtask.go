@@ -42,9 +42,7 @@ func clockTaskCron() (*cron.Cron, error) {
 	spec := fmt.Sprintf("%v %v * * *", perMinuteStr, perHourStr)
 	_, err := c.AddFunc(spec, func() {
 		log.Printf("[%v 定时打卡任务执行]\n", time.Now().Format("2006年01月02日15:04"))
-		log.Println("执行打卡逻辑。。。。。")
 		clockExec()
-
 	})
 	if err != nil {
 		return c, err
@@ -84,6 +82,7 @@ func userCheckCron() (*cron.Cron, error) {
 	return c, nil
 }
 
+// clockExec 跳过存在cron的用户进行打卡
 func clockExec() {
 	wf := workflow.NewWorkFlow()
 
@@ -93,9 +92,8 @@ func clockExec() {
 	CreateBrowserNode := workflow.NewNode(&initialize.NewBrowserChanAction{})      // 为每个用户创建浏览器对象
 	LoginNode := workflow.NewNode(&action.LoginAction{})                           // 获取浏览器对象进行登录
 	GetLoginBrowserNode := workflow.NewNode(
-		&action.GetLoginBrowserAction{ClockWorkflow: clockfunc.ClockWorkflowFilter}) // 获取浏览器对象执行打卡任务
-
-	EndNode := workflow.NewNode(&action.EndAction{}) // 结束占位
+		&action.GetLoginBrowserAction{
+			ClockWorkflow: clockfunc.ClockWorkflowFilter}) // 获取浏览器对象执行打卡任务，跳过存在cron的用户进行打卡
 
 	// 构建节点之间的关系
 	// 启始节点
@@ -106,12 +104,45 @@ func clockExec() {
 	// 中间节点
 	wf.AddEdge(LoadSystemConfigNode, GetUserArrayNode)
 	wf.AddEdge(GetUserArrayNode, CreateBrowserNode)
-	wf.AddEdge(LoginNode, EndNode)
-	wf.AddEdge(GetLoginBrowserNode, EndNode)
 
 	// 收尾节点
 	wf.ConnectToEnd(CreateBrowserNode)
-	wf.ConnectToEnd(EndNode)
+
+	// 数据
+	var completedAction map[string]interface{}
+	completedAction = make(map[string]interface{})
+
+	// 执行
+	ctx, _ := context.WithCancel(context.Background())
+	wf.StartWithContext(ctx, completedAction)
+	wf.WaitDone()
+}
+
+// clockFilterExec 根据用户cron创建定时任务
+func clockFilterExec() {
+	wf := workflow.NewWorkFlow()
+
+	// 构建节点
+	LoadSystemConfigNode := workflow.NewNode(&initialize.LoadSystemConfigAction{}) // 加载系统配置
+	GetUserArrayNode := workflow.NewNode(&initialize.NewUserChanAction{})          // 从数据库获取用户信息数组
+	CreateBrowserNode := workflow.NewNode(&initialize.NewBrowserChanAction{})      // 为每个用户创建浏览器对象
+	LoginNode := workflow.NewNode(&action.LoginAction{})                           // 获取浏览器对象进行登录
+	GetLoginBrowserNode := workflow.NewNode(
+		&action.GetLoginBrowserAction{
+			ClockWorkflow: clockfunc.ClockWorkflowCronSingle}) // 获取浏览器对象执行打卡任务，根据用户cron创建定时任务
+
+	// 构建节点之间的关系
+	// 启始节点
+	wf.AddStartNode(LoadSystemConfigNode)
+	wf.AddStartNode(LoginNode)
+	wf.AddStartNode(GetLoginBrowserNode)
+
+	// 中间节点
+	wf.AddEdge(LoadSystemConfigNode, GetUserArrayNode)
+	wf.AddEdge(GetUserArrayNode, CreateBrowserNode)
+
+	// 收尾节点
+	wf.ConnectToEnd(CreateBrowserNode)
 
 	// 数据
 	var completedAction map[string]interface{}

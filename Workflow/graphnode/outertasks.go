@@ -3,7 +3,6 @@ package action
 import (
 	"Yiban3/Browser/config"
 	browser "Yiban3/Browser/types"
-	"Yiban3/Workflow/types"
 	"Yiban3/Workflow/utils"
 	"log"
 	"sync"
@@ -26,12 +25,12 @@ func (a *LoginAction) Run(i interface{}) {
 		time.Sleep(time.Millisecond * 50)
 	}
 
-	browserChan := datas["browserChan"].(*types.YibanChan)
+	browserChan := datas["browserChan"].(*browser.YibanChan)
 	userCount := *(datas["userCount"].(*[]int))
 
 	var wg sync.WaitGroup
-	var loginChan *types.YibanChan
-	loginChan = types.NewYibanChan()
+	var loginChan *browser.YibanChan
+	loginChan = browser.NewYibanChan()
 
 	wg.Add(1)
 	go func() {
@@ -85,7 +84,7 @@ func (a *GetLoginBrowserAction) Run(i interface{}) {
 		}
 		time.Sleep(time.Millisecond * 50)
 	}
-	loginChan := datas["loginChan"].(*types.YibanChan)
+	loginChan := datas["loginChan"].(*browser.YibanChan)
 	userCount := *(datas["userCount"].(*[]int))
 
 	var wg sync.WaitGroup
@@ -111,7 +110,12 @@ func (a *GetLoginBrowserAction) Run(i interface{}) {
 				<-pool
 				go func() {
 					wg.Add(1)
-					a.ClockWorkflow(loginBrowser)
+					defer func() {
+						if r := recover(); r != nil {
+							log.Printf("执行函数出现错误 %v", r)
+						}
+						a.ClockWorkflow(loginBrowser)
+					}()
 					wg.Done()
 				}()
 				count++
@@ -120,7 +124,7 @@ func (a *GetLoginBrowserAction) Run(i interface{}) {
 	}()
 	log.Println("[核心程序加载] [完成]")
 	wg.Wait()
-	log.Println("[本次打卡结束!]")
+	log.Println("[操作结束!]")
 }
 
 // EndAction 功能拓展占位
