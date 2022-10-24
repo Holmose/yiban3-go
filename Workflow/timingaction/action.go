@@ -1,6 +1,7 @@
 package timingaction
 
 import (
+	"github.com/robfig/cron/v3"
 	"log"
 	"sync"
 )
@@ -55,9 +56,43 @@ func (a *DateUpdateAction) Run(i interface{}) {
 }
 
 // CronTaskBySingleAction 根据用户cron创建打卡任务
-type CronTaskBySingleAction struct{}
+type CronTaskBySingleAction struct {
+	once sync.Once // 限制只能被执行一次
+}
 
 func (a *CronTaskBySingleAction) Run(i interface{}) {
 	log.Println("根据用户cron创建打卡任务")
-	clockFilterExec()
+	c := cron.New(cron.WithChain())
+	taskIds := map[string]cron.EntryID{}
+	var wgm sync.WaitGroup
+
+	// 定时监测数据变化 不wait不会停止，因为有其他系统在运行
+	wgm.Add(1)
+	go a.once.Do(func() {
+		log.Println("[心跳检测创建中]")
+		var wg sync.WaitGroup
+		// 创建定时任务
+		monitor, err := monitorData(c, taskIds)
+		if err != nil {
+			log.Printf("[心跳检测创建失败 %v]", err)
+		} else {
+			log.Println("[心跳检测创建成功，等待执行中...]")
+			wg.Add(1)
+			defer wg.Done()
+			monitor.Start()
+			defer monitor.Stop()
+		}
+		wg.Wait()
+	})
+
+	wgm.Add(1)
+	defer wgm.Done()
+	log.Println("个人任务定时管理器启动")
+	c.Start()
+	defer c.Stop()
+
+	// 首次执行
+	clockFilterExec(c, taskIds)
+
+	wgm.Wait()
 }

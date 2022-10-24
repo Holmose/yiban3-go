@@ -119,7 +119,8 @@ func clockExec() {
 }
 
 // clockFilterExec 根据用户cron创建定时任务
-func clockFilterExec() {
+func clockFilterExec(taskc *cron.Cron,
+	taskIds map[string]cron.EntryID) {
 	wf := workflow.NewWorkFlow()
 
 	// 构建节点
@@ -147,9 +148,35 @@ func clockFilterExec() {
 	// 数据
 	var completedAction map[string]interface{}
 	completedAction = make(map[string]interface{})
+	completedAction["taskc"] = taskc
+	completedAction["taskIds"] = taskIds
 
 	// 执行
 	ctx, _ := context.WithCancel(context.Background())
 	wf.StartWithContext(ctx, completedAction)
 	wf.WaitDone()
+}
+
+// 定时监测数据变化
+func monitorData(taskc *cron.Cron, taskIds map[string]cron.EntryID) (*cron.Cron, error) {
+	//c := cron.New(cron.WithChain())
+	//spec := fmt.Sprintf("*/1 * * * *")
+
+	c := cron.New(cron.WithSeconds()) // 支持秒级
+	spec := fmt.Sprintf("*/5 * * * * *")
+	_, err := c.AddFunc(spec, func() {
+		log.Println(time.Now().Format("2006年01月02日15:04"), "心跳检测")
+		// 需要查询数据库中的数据，和本地进行对比
+
+		// 清空定时任务
+		for s, id := range taskIds {
+			taskc.Remove(id)
+			delete(taskIds, s)
+		}
+	})
+
+	if err != nil {
+		return c, err
+	}
+	return c, nil
 }

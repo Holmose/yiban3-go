@@ -73,7 +73,7 @@ func (a *LoginAction) Run(i interface{}) {
 
 // GetLoginBrowserAction 获取浏览器对象执行打卡任务
 type GetLoginBrowserAction struct {
-	ClockWorkflow func(interface{}) // 执行创建的打卡流
+	ClockWorkflow func(interface{}, interface{}) // 执行创建的打卡流
 }
 
 func (a *GetLoginBrowserAction) Run(i interface{}) {
@@ -114,7 +114,7 @@ func (a *GetLoginBrowserAction) Run(i interface{}) {
 						if r := recover(); r != nil {
 							log.Printf("执行函数出现错误 %v", r)
 						}
-						a.ClockWorkflow(loginBrowser)
+						a.ClockWorkflow(loginBrowser, i)
 					}()
 					wg.Done()
 				}()

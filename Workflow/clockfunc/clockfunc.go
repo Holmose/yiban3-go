@@ -7,7 +7,6 @@ import (
 	"github.com/Holmose/go-workflow/workflow"
 	"github.com/robfig/cron/v3"
 	"log"
-	"sync"
 	"time"
 )
 
@@ -16,7 +15,7 @@ import (
 */
 
 // ClockWorkflow 无过滤全部执行打卡
-func ClockWorkflow(loginBrowser interface{}) {
+func ClockWorkflow(loginBrowser interface{}, i interface{}) {
 	// 获取一个浏览器对象，发送数据到数据流中
 	wf := workflow.NewWorkFlow()
 	// 构建节点
@@ -60,40 +59,39 @@ func ClockWorkflow(loginBrowser interface{}) {
 }
 
 // ClockWorkflowFilter 有过滤 只执行无个人定时
-func ClockWorkflowFilter(loginBrowser interface{}) {
+func ClockWorkflowFilter(loginBrowser interface{}, i interface{}) {
 	// 判断是否丢弃
 	b := loginBrowser.(browser.Browser)
 	if b.User.Crontab != "" {
 		return
 	} else {
-		ClockWorkflow(loginBrowser)
+		ClockWorkflow(loginBrowser, i)
 	}
 }
 
-// ClockWorkflowCronSingle 根据个人定时创建定时任务
-func ClockWorkflowCronSingle(loginBrowser interface{}) {
+// ClockWorkflowCronSingle 根据个人信息定时创建定时任务
+func ClockWorkflowCronSingle(loginBrowser interface{}, i interface{}) {
 	// 判断是否存在cron配置
 	b := loginBrowser.(browser.Browser)
 	if b.User.Crontab == "" {
 		return
 	}
+	// 拿到数据
+	datas := i.(map[string]interface{})
+	taskc := datas["taskc"].(*cron.Cron)
+	taskIds := datas["taskIds"].(map[string]cron.EntryID)
+
 	// 创建定时任务
-	var wg sync.WaitGroup
 	spec := b.User.Crontab
-	c := cron.New(cron.WithChain())
-	_, err := c.AddFunc(spec, func() {
+	entryID, err := taskc.AddFunc(spec, func() {
 		log.Printf("[%v 用户：%v个人定时打卡任务执行]",
 			time.Now().Format("2006年01月02日15:04"), b.User.Username)
-		ClockWorkflow(loginBrowser)
+		ClockWorkflow(loginBrowser, i)
 	})
 	if err != nil {
 		log.Printf("[用户：%v 个人定时任务创建失败]", b.User.Username)
 	} else {
-		log.Printf("[用户：%v 个人定时任务创建成功，等待执行中...]", b.User.Username)
-		wg.Add(1)
-		defer wg.Done()
-		c.Start()
-		defer c.Stop()
+		log.Printf("[用户：%v 个人定时任务创建成功]", b.User.Username)
+		taskIds[b.User.Username] = entryID
 	}
-	wg.Wait()
 }
