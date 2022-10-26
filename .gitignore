@@ -1,3 +1,5 @@
 .idea
 config/*
 日志文件.log
+dist/
+.goreleaser.yaml
