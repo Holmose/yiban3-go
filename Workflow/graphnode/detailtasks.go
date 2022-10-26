@@ -80,10 +80,11 @@ retry:
 	unComplete, err := baseaction.FetchUnComplete(&b, unCompleteList)
 	if err != nil {
 		if !strings.Contains(err.Error(), "未打卡数据不存在") {
-			log.Println(err)
+			log.Printf("[[ 用户：%v 发生其他错误: %v ]]", b.User.Username, err)
+		} else {
+			log.Printf("[[ 用户：%v %v ]]", b.User.Username, err)
+			utils.SafeClose(b.ChanData.UnCompleteChan)
 		}
-		log.Printf("[[ 用户：%v %v ]]", b.User.Username, err)
-		utils.SafeClose(b.ChanData.UnCompleteChan)
 		return
 	} else {
 		// 用于获取打卡表单信息
@@ -223,8 +224,8 @@ retry:
 	err := Email.YiSend(&b, detail, clockResult, position)
 	if err != nil {
 		// 重试
-		log.Printf("用户：%v 邮件发送失败：%v，重试中...", b.User.Username, err)
-		time.Sleep(time.Second * 60)
+		log.Printf("用户：%v 邮件发送失败：%v，等待20分钟后重试...", b.User.Username, err)
+		time.Sleep(time.Minute * 20)
 		goto retry
 	}
 	log.Printf("[用户：%v 邮件发送成功]", b.User.Username)

@@ -3,6 +3,7 @@ package clockfunc
 import (
 	browser "Yiban3/Browser/types"
 	"Yiban3/Workflow/graphnode"
+	"Yiban3/Workflow/utils"
 	"context"
 	"github.com/Holmose/go-workflow/workflow"
 	"github.com/robfig/cron/v3"
@@ -79,19 +80,27 @@ func ClockWorkflowCronSingle(loginBrowser interface{}, i interface{}) {
 	// 拿到数据
 	datas := i.(map[string]interface{})
 	taskc := datas["taskc"].(*cron.Cron)
-	taskIds := datas["taskIds"].(map[string]cron.EntryID)
+	cronUser := datas["cronUser"].(map[string]utils.CronUser)
 
 	// 创建定时任务
 	spec := b.User.Crontab
 	entryID, err := taskc.AddFunc(spec, func() {
 		log.Printf("[%v 用户：%v个人定时打卡任务执行]",
 			time.Now().Format("2006年01月02日15:04"), b.User.Username)
-		ClockWorkflow(loginBrowser, i)
+		// 登录
+		_ = utils.LoginAddVerifyToMysql(&b)
+		// 打卡
+		ClockWorkflow(b, i)
 	})
 	if err != nil {
 		log.Printf("[用户：%v 个人定时任务创建失败]", b.User.Username)
 	} else {
 		log.Printf("[用户：%v 个人定时任务创建成功]", b.User.Username)
-		taskIds[b.User.Username] = entryID
+		cronUser[b.User.Username] = utils.CronUser{
+			UserName:   b.User.Username,
+			Spec:       spec,
+			EntryID:    entryID,
+			UpdateTime: b.User.UpdateTime,
+		}
 	}
 }

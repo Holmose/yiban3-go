@@ -1,12 +1,19 @@
 package utils
 
 import (
+	"github.com/robfig/cron/v3"
 	"sync"
 )
 
 type YibanChan struct {
 	C    chan interface{} // 用户数据信息通道
 	once sync.Once        // 确保只会关闭一次
+}
+type CronUser struct {
+	UserName   string
+	Spec       string
+	EntryID    cron.EntryID
+	UpdateTime string
 }
 
 func NewYibanChan() *YibanChan {

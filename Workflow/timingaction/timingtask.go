@@ -2,6 +2,7 @@ package timingaction
 
 import (
 	"Yiban3/Browser/config"
+	"Yiban3/MysqlConnect"
 	"Yiban3/Workflow/clockfunc"
 	action "Yiban3/Workflow/graphnode"
 	"Yiban3/Workflow/graphnode/initialize"
@@ -120,7 +121,7 @@ func clockExec() {
 
 // clockFilterExec 根据用户cron创建定时任务
 func clockFilterExec(taskc *cron.Cron,
-	taskIds map[string]cron.EntryID) {
+	cronUser map[string]utils.CronUser) {
 	wf := workflow.NewWorkFlow()
 
 	// 构建节点
@@ -149,7 +150,7 @@ func clockFilterExec(taskc *cron.Cron,
 	var completedAction map[string]interface{}
 	completedAction = make(map[string]interface{})
 	completedAction["taskc"] = taskc
-	completedAction["taskIds"] = taskIds
+	completedAction["cronUser"] = cronUser
 
 	// 执行
 	ctx, _ := context.WithCancel(context.Background())
@@ -158,25 +159,79 @@ func clockFilterExec(taskc *cron.Cron,
 }
 
 // 定时监测数据变化
-func monitorData(taskc *cron.Cron, taskIds map[string]cron.EntryID) (*cron.Cron, error) {
+func monitorData(taskc *cron.Cron,
+	cronUsers map[string]utils.CronUser) (*cron.Cron, error) {
 	//c := cron.New(cron.WithChain())
-	//spec := fmt.Sprintf("*/1 * * * *")
+	//spec := fmt.Sprintf("*/5 * * * *")
 
 	c := cron.New(cron.WithSeconds()) // 支持秒级
-	spec := fmt.Sprintf("*/5 * * * * *")
-	_, err := c.AddFunc(spec, func() {
-		log.Println(time.Now().Format("2006年01月02日15:04"), "心跳检测")
-		// 需要查询数据库中的数据，和本地进行对比
+	spec := fmt.Sprintf("*/10 * * * * *")
 
-		// 清空定时任务
-		for s, id := range taskIds {
-			taskc.Remove(id)
-			delete(taskIds, s)
-		}
+	_, err := c.AddFunc(spec, func() {
+		//log.Println(time.Now().Format("2006年01月02日15:04"), "心跳检测")
+		check(taskc, cronUsers)
 	})
 
 	if err != nil {
 		return c, err
 	}
 	return c, nil
+}
+
+func check(taskc *cron.Cron,
+	cronUsers map[string]utils.CronUser) {
+	// 判断是否有条目被删除
+	sql := "SELECT COUNT(*) FROM yiban_yiban;"
+	rst, err := MysqlConnect.Query(sql)
+	if err != nil {
+		log.Println("[Database connection failed.]")
+	}
+	count, err := strconv.Atoi(rst[0]["COUNT(*)"])
+	if !(count >= len(cronUsers)) {
+		log.Println("[定时任务系统] 有用户数据被删除了")
+		rebuild(taskc, cronUsers)
+	}
+
+	// 查询数据库
+	sql = "SELECT username,clock_crontab,update_time,day FROM yiban_yiban;"
+	rst, err = MysqlConnect.Query(sql)
+	if err != nil {
+		log.Println("[Database connection failed.]")
+	}
+
+	for _, v := range rst {
+		value, ok := cronUsers[v["username"]]
+
+		// 新添加了一个cron
+		if !ok && v["clock_crontab"] != "" && v["day"] != "0" {
+			log.Printf("[定时任务系统] 用户 %v 增加了cron", v["username"])
+			rebuild(taskc, cronUsers)
+		}
+
+		// 判断更新
+		if ok && v["update_time"] != value.UpdateTime {
+			log.Printf("[定时任务系统] 用户 %v 的cron更新了", v["username"])
+			rebuild(taskc, cronUsers)
+		}
+		// 判断删除
+		if ok && v["clock_crontab"] == "" {
+			log.Printf("[定时任务系统] 用户 %v 删除cron", v["username"])
+			rebuild(taskc, cronUsers)
+		}
+	}
+}
+
+func rebuild(taskc *cron.Cron,
+	cronUsers map[string]utils.CronUser) {
+	taskc.Stop()
+	// 清空定时任务
+	for _, entry := range taskc.Entries() {
+		taskc.Remove(entry.ID)
+	}
+	for username, _ := range cronUsers {
+		delete(cronUsers, username)
+	}
+	// 全部重建
+	clockFilterExec(taskc, cronUsers)
+	taskc.Start()
 }

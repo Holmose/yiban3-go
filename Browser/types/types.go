@@ -24,6 +24,10 @@ type User struct {
 	Crontab   string
 	Cron      *cron.Cron
 	IsHoliday bool
+	// 创建时间
+	CreateTime string
+	// 更新时间
+	UpdateTime string
 	// 剩余天数
 	Day int
 }

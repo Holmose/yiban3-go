@@ -15,10 +15,7 @@ import (
 
 // LoginAddVerifyToMysql 登录并添加数据到数据库
 func LoginAddVerifyToMysql(b *browser.Browser) error {
-	verifyISNil := false
-	if b.User.Verify == "" {
-		verifyISNil = true
-	}
+	hverify := b.User.Verify
 retry:
 	_, err := login.Login(b)
 	if err != nil {
@@ -26,7 +23,7 @@ retry:
 		time.Sleep(time.Second)
 		goto retry
 	}
-	if verifyISNil {
+	if hverify == "" || b.User.Verify != hverify {
 		sql := fmt.Sprintf(
 			"UPDATE yiban_yiban set verify=\"%s\" where username=\"%s\" ", b.User.Verify, b.User.Username)
 		MysqlConnect.Exec(sql)
@@ -111,14 +108,16 @@ func GetUserToQ(rst []map[string]string) ([]browser.User, error) {
 			return nil, err
 		}
 		userInfo := browser.User{
-			Username:  yiban["username"],
-			Password:  yiban["password"],
-			Verify:    yiban["verify"],
-			Position:  yiban["address"],
-			Mail:      yiban["e_mail"],
-			Crontab:   yiban["clock_crontab"],
-			IsHoliday: isHoliday,
-			Day:       day,
+			Username:   yiban["username"],
+			Password:   yiban["password"],
+			Verify:     yiban["verify"],
+			Position:   yiban["address"],
+			Mail:       yiban["e_mail"],
+			Crontab:    yiban["clock_crontab"],
+			IsHoliday:  isHoliday,
+			CreateTime: yiban["create_time"],
+			UpdateTime: yiban["update_time"],
+			Day:        day,
 		}
 		q = append(q, userInfo)
 	}
