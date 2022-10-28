@@ -80,7 +80,7 @@ func ClockWorkflowCronSingle(loginBrowser interface{}, i interface{}) {
 	// 拿到数据
 	datas := i.(map[string]interface{})
 	taskc := datas["taskc"].(*cron.Cron)
-	cronUser := datas["cronUser"].(map[string]utils.CronUser)
+	cronUsers := datas["cronUsers"].(map[string]utils.CronUser)
 
 	// 创建定时任务
 	spec := b.User.Crontab
@@ -96,7 +96,7 @@ func ClockWorkflowCronSingle(loginBrowser interface{}, i interface{}) {
 		log.Printf("[用户：%v 个人定时任务创建失败]", b.User.Username)
 	} else {
 		log.Printf("[用户：%v 个人定时任务创建成功]", b.User.Username)
-		cronUser[b.User.Username] = utils.CronUser{
+		cronUsers[b.User.Username] = utils.CronUser{
 			UserName:   b.User.Username,
 			Spec:       spec,
 			EntryID:    entryID,

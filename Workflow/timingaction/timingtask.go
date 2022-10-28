@@ -121,7 +121,7 @@ func clockExec() {
 
 // clockFilterExec 根据用户cron创建定时任务
 func clockFilterExec(taskc *cron.Cron,
-	cronUser map[string]utils.CronUser) {
+	cronUsers map[string]utils.CronUser) {
 	wf := workflow.NewWorkFlow()
 
 	// 构建节点
@@ -150,7 +150,7 @@ func clockFilterExec(taskc *cron.Cron,
 	var completedAction map[string]interface{}
 	completedAction = make(map[string]interface{})
 	completedAction["taskc"] = taskc
-	completedAction["cronUser"] = cronUser
+	completedAction["cronUsers"] = cronUsers
 
 	// 执行
 	ctx, _ := context.WithCancel(context.Background())
@@ -206,17 +206,20 @@ func check(taskc *cron.Cron,
 		if !ok && v["clock_crontab"] != "" && v["day"] != "0" {
 			log.Printf("[定时任务系统] 用户 %v 增加了cron", v["username"])
 			rebuild(taskc, cronUsers)
+			return
 		}
 
 		// 判断更新
 		if ok && v["update_time"] != value.UpdateTime {
 			log.Printf("[定时任务系统] 用户 %v 的cron更新了", v["username"])
 			rebuild(taskc, cronUsers)
+			return
 		}
 		// 判断删除
 		if ok && v["clock_crontab"] == "" {
 			log.Printf("[定时任务系统] 用户 %v 删除cron", v["username"])
 			rebuild(taskc, cronUsers)
+			return
 		}
 	}
 }

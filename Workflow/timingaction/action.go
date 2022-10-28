@@ -92,8 +92,5 @@ func (a *CronTaskBySingleAction) Run(i interface{}) {
 	c.Start()
 	defer c.Stop()
 
-	// 首次执行
-	clockFilterExec(c, cronUsers)
-
 	wgm.Wait()
 }
