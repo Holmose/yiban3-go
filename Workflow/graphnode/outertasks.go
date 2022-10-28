@@ -124,7 +124,7 @@ func (a *GetLoginBrowserAction) Run(i interface{}) {
 	}()
 	log.Println("[核心程序加载] [完成]")
 	wg.Wait()
-	log.Println("[操作结束!]")
+	log.Println("[获取浏览器执行操作完成!]")
 }
 
 // EndAction 功能拓展占位

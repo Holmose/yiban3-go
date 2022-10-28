@@ -120,8 +120,7 @@ func clockExec() {
 }
 
 // clockFilterExec 根据用户cron创建定时任务
-func clockFilterExec(taskc *cron.Cron,
-	cronUsers map[string]utils.CronUser) {
+func clockFilterExec(personCrons utils.PersonalCrons) {
 	wf := workflow.NewWorkFlow()
 
 	// 构建节点
@@ -149,8 +148,7 @@ func clockFilterExec(taskc *cron.Cron,
 	// 数据
 	var completedAction map[string]interface{}
 	completedAction = make(map[string]interface{})
-	completedAction["taskc"] = taskc
-	completedAction["cronUsers"] = cronUsers
+	completedAction["personCrons"] = personCrons
 
 	// 执行
 	ctx, _ := context.WithCancel(context.Background())
@@ -159,8 +157,7 @@ func clockFilterExec(taskc *cron.Cron,
 }
 
 // 定时监测数据变化
-func monitorData(taskc *cron.Cron,
-	cronUsers map[string]utils.CronUser) (*cron.Cron, error) {
+func monitorData(personCrons utils.PersonalCrons) (*cron.Cron, error) {
 	//c := cron.New(cron.WithChain())
 	//spec := fmt.Sprintf("*/5 * * * *")
 
@@ -169,7 +166,7 @@ func monitorData(taskc *cron.Cron,
 
 	_, err := c.AddFunc(spec, func() {
 		//log.Println(time.Now().Format("2006年01月02日15:04"), "心跳检测")
-		check(taskc, cronUsers)
+		check(personCrons)
 	})
 
 	if err != nil {
@@ -178,63 +175,61 @@ func monitorData(taskc *cron.Cron,
 	return c, nil
 }
 
-func check(taskc *cron.Cron,
-	cronUsers map[string]utils.CronUser) {
+func check(personCrons utils.PersonalCrons) {
 	// 判断是否有条目被删除
-	sql := "SELECT COUNT(*) FROM yiban_yiban;"
-	rst, err := MysqlConnect.Query(sql)
-	if err != nil {
-		log.Println("[Database connection failed.]")
-	}
-	count, err := strconv.Atoi(rst[0]["COUNT(*)"])
-	if !(count >= len(cronUsers)) {
-		log.Println("[定时任务系统] 有用户数据被删除了")
-		rebuild(taskc, cronUsers)
-	}
 
 	// 查询数据库
-	sql = "SELECT username,clock_crontab,update_time,day FROM yiban_yiban;"
-	rst, err = MysqlConnect.Query(sql)
+	sql := "SELECT username,clock_crontab,update_time,day FROM yiban_yiban;"
+	rst, err := MysqlConnect.Query(sql)
 	if err != nil {
 		log.Println("[Database connection failed.]")
 	}
 
 	for _, v := range rst {
-		value, ok := cronUsers[v["username"]]
+		value, ok := personCrons.Get(v["username"])
 
 		// 新添加了一个cron
 		if !ok && v["clock_crontab"] != "" && v["day"] != "0" {
-			log.Printf("[定时任务系统] 用户 %v 增加了cron", v["username"])
-			rebuild(taskc, cronUsers)
-			return
+			log.Printf("[定时任务系统] 用户 %v 检测到定时任务信息，添加中", v["username"])
+			rebuild(personCrons, v["username"])
 		}
 
 		// 判断更新
 		if ok && v["update_time"] != value.UpdateTime {
-			log.Printf("[定时任务系统] 用户 %v 的cron更新了", v["username"])
-			rebuild(taskc, cronUsers)
-			return
+			log.Printf("[定时任务系统] 用户 %v 的信息更新，移除原始定时任务", v["username"])
+			rebuild(personCrons, v["username"])
 		}
 		// 判断删除
 		if ok && v["clock_crontab"] == "" {
-			log.Printf("[定时任务系统] 用户 %v 删除cron", v["username"])
-			rebuild(taskc, cronUsers)
-			return
+			log.Printf("[定时任务系统] 用户 %v 删除定时任务，移除任务", v["username"])
+			rebuild(personCrons, v["username"])
+		}
+	}
+
+	// 判断用户信息删除
+	personSlice := []string{}
+	dbSlict := []string{}
+	for key, _ := range personCrons.GetAll() {
+		personSlice = append(personSlice, key)
+	}
+	for _, v := range rst {
+		dbSlict = append(dbSlict, v["username"])
+	}
+	di := utils.Difference(personSlice, dbSlict)
+	if len(di) != 0 {
+		for _, s := range di {
+			log.Printf("[定时任务系统] 用户 %v 数据被删除了, 定时任务移除", s)
+			rebuild(personCrons, s)
 		}
 	}
 }
 
-func rebuild(taskc *cron.Cron,
-	cronUsers map[string]utils.CronUser) {
-	taskc.Stop()
-	// 清空定时任务
-	for _, entry := range taskc.Entries() {
-		taskc.Remove(entry.ID)
-	}
-	for username, _ := range cronUsers {
-		delete(cronUsers, username)
-	}
+func rebuild(personCrons utils.PersonalCrons,
+	username string) {
+	personCrons.Stop()
+	// 移除定时任务
+	personCrons.Remove(username)
 	// 全部重建
-	clockFilterExec(taskc, cronUsers)
-	taskc.Start()
+	clockFilterExec(personCrons)
+	personCrons.Start()
 }

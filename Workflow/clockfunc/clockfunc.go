@@ -5,9 +5,10 @@ import (
 	"Yiban3/Workflow/graphnode"
 	"Yiban3/Workflow/utils"
 	"context"
+	"fmt"
 	"github.com/Holmose/go-workflow/workflow"
-	"github.com/robfig/cron/v3"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -79,12 +80,14 @@ func ClockWorkflowCronSingle(loginBrowser interface{}, i interface{}) {
 	}
 	// 拿到数据
 	datas := i.(map[string]interface{})
-	taskc := datas["taskc"].(*cron.Cron)
-	cronUsers := datas["cronUsers"].(map[string]utils.CronUser)
+	personCrons := datas["personCrons"].(utils.PersonalCrons)
 
 	// 创建定时任务
-	spec := b.User.Crontab
-	entryID, err := taskc.AddFunc(spec, func() {
+	err := personCrons.Add(utils.CronUser{
+		UserName:   b.User.Username,
+		Spec:       b.User.Crontab,
+		UpdateTime: b.User.UpdateTime,
+	}, func() {
 		log.Printf("[%v 用户：%v个人定时打卡任务执行]",
 			time.Now().Format("2006年01月02日15:04"), b.User.Username)
 		// 登录
@@ -93,14 +96,12 @@ func ClockWorkflowCronSingle(loginBrowser interface{}, i interface{}) {
 		ClockWorkflow(b, i)
 	})
 	if err != nil {
-		log.Printf("[用户：%v 个人定时任务创建失败]", b.User.Username)
+		if !strings.Contains(err.Error(),
+			fmt.Sprintf("user %v found", b.User.Username)) {
+			log.Printf("[用户：%v 个人定时任务创建失败] err : %v", b.User.Username, err)
+		}
 	} else {
 		log.Printf("[用户：%v 个人定时任务创建成功]", b.User.Username)
-		cronUsers[b.User.Username] = utils.CronUser{
-			UserName:   b.User.Username,
-			Spec:       spec,
-			EntryID:    entryID,
-			UpdateTime: b.User.UpdateTime,
-		}
 	}
+
 }

@@ -2,7 +2,6 @@ package timingaction
 
 import (
 	"Yiban3/Workflow/utils"
-	"github.com/robfig/cron/v3"
 	"log"
 	"sync"
 )
@@ -62,9 +61,9 @@ type CronTaskBySingleAction struct {
 }
 
 func (a *CronTaskBySingleAction) Run(i interface{}) {
-	log.Println("根据用户cron创建打卡任务")
-	c := cron.New(cron.WithChain())
-	cronUsers := map[string]utils.CronUser{}
+	log.Println("[根据用户cron创建打卡任务]")
+	personCrons := utils.PersonalCrons{}
+	personCrons.New()
 	var wgm sync.WaitGroup
 
 	// 定时监测数据变化 不wait不会停止，因为有其他系统在运行
@@ -73,7 +72,7 @@ func (a *CronTaskBySingleAction) Run(i interface{}) {
 		log.Println("[心跳检测创建中]")
 		var wg sync.WaitGroup
 		// 创建定时任务
-		monitor, err := monitorData(c, cronUsers)
+		monitor, err := monitorData(personCrons)
 		if err != nil {
 			log.Printf("[心跳检测创建失败 %v]", err)
 		} else {
@@ -88,9 +87,12 @@ func (a *CronTaskBySingleAction) Run(i interface{}) {
 
 	wgm.Add(1)
 	defer wgm.Done()
-	log.Println("个人任务定时管理器启动")
-	c.Start()
-	defer c.Stop()
+	log.Println("[个人任务定时管理器启动]")
+	personCrons.Start()
+	defer personCrons.Stop()
+
+	// 首次执行
+	clockFilterExec(personCrons)
 
 	wgm.Wait()
 }
