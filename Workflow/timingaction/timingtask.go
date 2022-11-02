@@ -68,21 +68,6 @@ func dailyReduceCron() (*cron.Cron, error) {
 	return c, nil
 }
 
-// 用户数变化检查
-func userCheckCron() (*cron.Cron, error) {
-	c := cron.New(cron.WithChain())
-
-	spec := fmt.Sprintf("*/10 9-17 * * *")
-	_, err := c.AddFunc(spec, func() {
-		log.Println(time.Now().Format("2006年01月02日15:04"), "用户数量心跳检测执行")
-		log.Println("心跳检测执行")
-	})
-	if err != nil {
-		return c, err
-	}
-	return c, nil
-}
-
 // clockExec 跳过存在cron的用户进行打卡
 func clockExec() {
 	wf := workflow.NewWorkFlow()

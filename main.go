@@ -1,11 +1,13 @@
 package main
 
 import (
+	"Yiban3/Browser/config"
 	"Yiban3/Flowcharts"
 	"flag"
 	"io"
 	"log"
 	"os"
+	"time"
 )
 
 func init() {
@@ -34,4 +36,5 @@ func main() {
 		Flowcharts.ClockOnce()
 	}
 	Flowcharts.ClockTimingSys()
+	time.Sleep(time.Second * config.ShowSecond)
 }

@@ -11,6 +11,21 @@ import (
 	"time"
 )
 
+// Urbaner 易班打卡相关动作
+type Urbaner interface {
+	GetCompleteList()       // 获取打卡完成的列表 delta: 前几天的数据
+	GetDetail()             // 获取表单信息
+	GetMessage()            // 获取完成打卡的详细信息
+	GetUnCompleteList()     // 获取未打卡的列表
+	FetchUnComplete()       // 从未打卡列表中拿出一条
+	CreateForm()            //创建打卡表单（获取在服务器已经生成的
+	SubmitForm()            // 提交表单
+	GetCompleteByLocation() // 根据位置返回一条打卡成功的数据
+	FillHolidayForm()       // 填写表单 假期
+	FillForm()              // 填写表单 非假期
+	Login()                 // 使用账号密码进行登录，并返回一个client对象
+}
+
 // User 用户信息结构
 type User struct {
 	Username string

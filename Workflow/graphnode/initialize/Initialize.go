@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"Yiban3/Browser/config"
 	browser "Yiban3/Browser/types"
 	"Yiban3/Workflow/utils"
 	"log"
@@ -16,11 +17,18 @@ import (
 type LoadSystemConfigAction struct{}
 
 func (a *LoadSystemConfigAction) Run(i interface{}) {
-	err := utils.LoadSystemConfig("config/config.json")
+	var globalConf config.ConfigS
+	err := globalConf.InitConfig("config/config.json")
 	if err != nil {
 		log.Panic("[加载系统配置] [失败]", err.Error())
 	} else {
 		log.Println("[加载系统配置] [成功]")
+	}
+	err = globalConf.SaveConfig("config/config.json")
+	if err != nil {
+		log.Panic("[格式化系统配置] [失败]", err.Error())
+	} else {
+		log.Println("[格式化系统配置] [成功]")
 	}
 }
 
