@@ -149,9 +149,14 @@ func monitorData(personCrons utils.PersonalCrons) (*cron.Cron, error) {
 	c := cron.New(cron.WithSeconds()) // 支持秒级
 	spec := fmt.Sprintf("*/10 * * * * *")
 
+	var ct utils.CronTaskStatus = &utils.CronStatus{}
+
 	_, err := c.AddFunc(spec, func() {
 		//log.Println(time.Now().Format("2006年01月02日15:04"), "心跳检测")
 		check(personCrons)
+		// 将定时任务状态写入文件
+		ct.Update(personCrons)
+		ct.Save("config/cron_status.json")
 	})
 
 	if err != nil {

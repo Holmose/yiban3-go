@@ -87,6 +87,9 @@ func ClockWorkflowCronSingle(loginBrowser interface{}, i interface{}) {
 		UserName:   b.User.Username,
 		Spec:       b.User.Crontab,
 		UpdateTime: b.User.UpdateTime,
+		Position:   b.User.Position,
+		IsHoliday:  b.User.IsHoliday,
+		Day:        b.User.Day,
 	}, func() {
 		log.Printf("[%v 用户：%v个人定时打卡任务执行]",
 			time.Now().Format("2006年01月02日15:04"), b.User.Username)

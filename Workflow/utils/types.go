@@ -1,10 +1,14 @@
 package utils
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/robfig/cron/v3"
+	"os"
 	"sync"
+	"time"
 )
 
 type YibanChan struct {
@@ -39,14 +43,18 @@ type CronUser struct {
 	UserName   string
 	Spec       string
 	UpdateTime string
+	Position   string
+	IsHoliday  bool
+	Day        int
 	entryID    cron.EntryID
 }
 
 // PersonalCrons 存储个人定时任务
 type PersonalCrons struct {
-	infos map[string]CronUser // 个人定时信息
-	cron  *cron.Cron
-	mutex *sync.Mutex // 同步管理
+	infos   map[string]CronUser // 个人定时信息
+	cron    *cron.Cron
+	mutex   *sync.Mutex // 同步管理
+	running bool
 }
 
 func (p *PersonalCrons) New() {
@@ -111,12 +119,54 @@ func (p *PersonalCrons) Len() int {
 func (p *PersonalCrons) Start() {
 	p.mutex.Lock()
 	p.cron.Start()
+	p.running = true
 	p.mutex.Unlock()
 }
 func (p *PersonalCrons) Stop() {
 	p.mutex.Lock()
 	p.cron.Stop()
+	p.running = false
 	p.mutex.Unlock()
+}
+
+type CronTaskStatus interface {
+	Update(PersonalCrons)
+	Save(string) error
+}
+
+// CronStatus 定时任务状态
+type CronStatus struct {
+	Tasks       []CronUser
+	CronRunning bool
+	CheckTime   string
+}
+
+func (c *CronStatus) Update(p PersonalCrons) {
+	c.Tasks = []CronUser{}
+	for _, user := range p.infos {
+		c.Tasks = append(c.Tasks, user)
+	}
+	c.CronRunning = p.running
+	c.CheckTime = time.Now().Format("2006-01-02 15:04:05")
+}
+func (c *CronStatus) Save(filePath string) error {
+	res, err := json.Marshal(c)
+	if err != nil {
+		return err
+	}
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	var out bytes.Buffer
+	err = json.Indent(&out, res, "", "  ")
+	_, err = out.WriteTo(file)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Union 求数组的并集
