@@ -52,11 +52,11 @@ func clockTaskCron() (*cron.Cron, error) {
 	return c, nil
 }
 
-// 每天2点 剩余天数减一
+// 每天23点 剩余天数减一
 func dailyReduceCron() (*cron.Cron, error) {
 	c := cron.New(cron.WithChain())
 
-	spec := fmt.Sprintf("0 2 * * *")
+	spec := fmt.Sprintf("0 23 * * *")
 	_, err := c.AddFunc(spec, func() {
 		log.Println(time.Now().Format("2006年01月02日15:04"), "定时剩余天数减一任务执行")
 		utils.DayReduce()
