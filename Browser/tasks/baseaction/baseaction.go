@@ -121,16 +121,18 @@ func FetchUnComplete(b *browser.Browser, t browser.Tasks) (d browser.Data, err e
 	for _, d := range t.Data {
 		timeUnix := time.Now().Unix()
 
+		//TODO 添加表单类型
 		if timeUnix >= d.StartTime && strings.Contains(d.Title, "体温报备") {
 			log.Printf("(** 用户：%v %v 未打卡! **)", b.User.Username, d.Title)
 			return d, nil
 		} else if strings.Contains(d.Title, "学生身体状况采集") {
 			log.Printf("(** 用户：%v %v 未打卡! **)", b.User.Username, d.Title)
 			return d, nil
+		} else if strings.Contains(d.Title, "健康日报") {
+			log.Printf("(** 用户：%v %v 未打卡! **)", b.User.Username, d.Title)
+			return d, nil
 		}
-
 	}
-
 	return d, fmt.Errorf("未打卡数据不存在！")
 }
 
