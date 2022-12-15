@@ -23,28 +23,6 @@ func main() {
 	// 用户鉴权
 	r.Use(controllers.AuthMiddleware())
 
-	// 创建测试
-
-	//for i := 0; i < 150; i++ {
-	//	user2 := model.User{
-	//		UserName: "1103",
-	//		Name:     "110",
-	//		Email:    "110",
-	//		Verify:   "",
-	//		Period:   0,
-	//		Address:  "11",
-	//		Template: 0,
-	//		Crontab:  "",
-	//	}
-	//	user2.UserName = strconv.Itoa(i)
-	//	err := user2.CreateUpdateUser()
-	//	fmt.Println(err)
-	//}
-
-	//var form model.Users
-	//form.FindAllByPage(model.SetPage(5))
-	//fmt.Println(form)
-
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
