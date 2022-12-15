@@ -2,15 +2,16 @@ package models
 
 import (
 	"Yiban3/FrontWeb/helper"
+	"encoding/json"
 	"errors"
 	"strconv"
 )
 
 type Admin struct {
 	ID       int    `gorm:"column:id; primary_key" json:"id"`
-	Name     string `gorm:"column:name" json:"name"`         // 用户名
-	PassWord string `gorm:"column:password" json:"password"` // 密码
-	Token    string `gorm:"column:token" json:"token"`       // 密码
+	Name     string `gorm:"column:name;unique;not null" json:"name"`  // 用户名
+	PassWord string `gorm:"column:password;not null" json:"password"` // 密码
+	Token    string `gorm:"column:token" json:"token"`                // TOKEN
 }
 
 // TableName 自定义表名
@@ -50,9 +51,22 @@ func (a *Admin) Add() error {
 }
 
 func (a *Admin) Update() error {
-	if err := db.Save(a).Error; err != nil {
+
+	var cache Admin
+	cache = *a
+	if err := db.First(a, "name=?", a.Name).Error; err != nil {
 		helper.LogError(err.Error())
-		return errors.New("修改用户失败")
+		return errors.New("用户不存在")
+	}
+	// 更新
+	cache.ID = a.ID
+	bytes, _ := json.Marshal(cache)
+	m := make(map[string]interface{})
+	json.Unmarshal(bytes, &m)
+	if err := db.Model(&a).Omit(
+		"create_time", "update_time").Updates(m).Error; err != nil {
+		helper.LogError(err.Error())
+		return errors.New("用户更新失败")
 	}
 	return nil
 }

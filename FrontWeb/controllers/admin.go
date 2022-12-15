@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-type UserCreateRequest struct {
+type AdminCreateRequest struct {
 	Name     string `json:"name"`     // 用户名
 	PassWord string `json:"password"` // 密码
 }
@@ -51,22 +51,22 @@ func (a *AdminController) Login(c *gin.Context) {
 }
 
 func (a *AdminController) Create(c *gin.Context) {
-	var userCreateRequest UserCreateRequest
+	var adminCreateRequest AdminCreateRequest
 
 	// 将前端穿过来的json数据绑定存储在这个实体类中，BindJSON()也能使用
-	if err := c.ShouldBindJSON(&userCreateRequest); err != nil {
+	if err := c.ShouldBindJSON(&adminCreateRequest); err != nil {
 		helper.LogError(err.Error())
 		return
 	}
 	var admin models.Admin
-	if num := admin.CountUserByName(userCreateRequest.Name); num > 0 {
+	if num := admin.CountUserByName(adminCreateRequest.Name); num > 0 {
 		c.JSON(400, Response{Message: "用户已经存在", Error: "user already exists"})
 		return
 	}
 
 	// 调用业务层的方法
-	admin.Name = userCreateRequest.Name
-	admin.PassWord = helper.Md5(userCreateRequest.PassWord)
+	admin.Name = adminCreateRequest.Name
+	admin.PassWord = helper.Md5(adminCreateRequest.PassWord)
 	if err := admin.Add(); err != nil {
 		c.JSON(400, err)
 		helper.LogError(err.Error())
@@ -76,8 +76,16 @@ func (a *AdminController) Create(c *gin.Context) {
 }
 
 func (a *AdminController) Update(c *gin.Context) {
+	var adminCreateRequest AdminCreateRequest
+	// 将前端穿过来的json数据绑定存储在这个实体类中，BindJSON()也能使用
+	if err := c.BindJSON(&adminCreateRequest); err != nil {
+		helper.LogError(err.Error())
+		return
+	}
+
 	var admin models.Admin
-	c.BindJSON(&admin)
+	admin.Name = adminCreateRequest.Name
+	admin.PassWord = helper.Md5(adminCreateRequest.PassWord)
 	if err := admin.Update(); err != nil {
 		c.JSON(http.StatusBadRequest, Response{Message: "failed", Error: err.Error()})
 	} else {

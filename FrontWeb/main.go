@@ -35,7 +35,7 @@ func main() {
 
 	// 管理员
 	r.POST("/login", controllers.AdminControl.Login)
-	r.POST("/creatAdmin", controllers.AdminControl.Create)
+	r.POST("/createAdmin", controllers.AdminControl.Create)
 	r.POST("/updateAdmin", controllers.AdminControl.Update)
 	r.POST("/deleteAdmin", controllers.AdminControl.Delete)
 

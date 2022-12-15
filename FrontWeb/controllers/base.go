@@ -24,7 +24,7 @@ type ResponseLogin struct {
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.RequestURI == "/login" ||
-			c.Request.RequestURI == "/ping" {
+			c.Request.RequestURI == "/createAdmin" {
 			return
 		}
 		if _, err := Auth(c); err != nil {
